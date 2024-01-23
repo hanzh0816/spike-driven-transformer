@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 
 
 def add_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
