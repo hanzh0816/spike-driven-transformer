@@ -1,7 +1,11 @@
+from copy import deepcopy
 from sympy import false
 import torch
 import torch.nn as nn
-from spikingjelly.clock_driven.neuron import MultiStepLIFNode, MultiStepParametricLIFNode
+from spikingjelly.clock_driven.neuron import (
+    MultiStepLIFNode,
+    MultiStepParametricLIFNode,
+)
 
 from timm.models.layers import DropPath, to_2tuple
 
@@ -11,7 +15,9 @@ def get_lif_neuron(tau, mode, backend="torch"):
     if mode == "lif":
         lif = MultiStepLIFNode(tau=tau, detach_reset=True, backend=backend)
     elif mode == "plif":
-        lif = MultiStepParametricLIFNode(init_tau=tau, detach_reset=True, backend=backend)
+        lif = MultiStepParametricLIFNode(
+            init_tau=tau, detach_reset=True, backend=backend
+        )
     else:
         raise ValueError("Invalid lif mode")
     return lif
@@ -30,6 +36,7 @@ class PSModule(nn.Module):
     ):
         super().__init__()
         self.image_size = [img_size_h, img_size_w]
+        self.pooling_stat = pooling_stat
 
         # layer 1
         self.proj_conv1 = nn.Conv2d(
@@ -40,14 +47,24 @@ class PSModule(nn.Module):
 
         # layer 2
         self.proj_conv2 = nn.Conv2d(
-            embed_dims // 8, embed_dims // 4, kernel_size=3, stride=1, padding=1, bias=False
+            embed_dims // 8,
+            embed_dims // 4,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False,
         )
         self.proj_bn2 = nn.BatchNorm2d(embed_dims // 4)
         self.proj_lif2 = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
         # layer 3
         self.proj_conv3 = nn.Conv2d(
-            embed_dims // 4, embed_dims // 2, kernel_size=3, stride=1, padding=1, bias=False
+            embed_dims // 4,
+            embed_dims // 2,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False,
         )
         self.proj_bn3 = nn.BatchNorm2d(embed_dims // 2)
         self.proj_lif3 = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
@@ -104,8 +121,6 @@ class PSModule(nn.Module):
         # layer 4
         x = self.proj_conv4(x.flatten(0, 1))
         x = self.proj_bn4(x).reshape(T, B, -1, H // ratio, W // ratio).contiguous()
-        if hook is not None:
-            hook[self._get_name() + "_lif4"] = x.detach()
 
         x = x.flatten(0, 1).contiguous()
         if self.pooling_stat["3"] == "1":
@@ -118,8 +133,10 @@ class PSModule(nn.Module):
 
 
 class RPEModule(nn.Module):
-    def __init__(self, embed_dims, spike_mode, backend):
-        self.rpe_proj_conv = nn.Conv2d(embed_dims, embed_dims, kernel_size=3, stride=1, padding=1, bias=False)
+    def __init__(self, embed_dims, spike_mode, backend="torch"):
+        self.rpe_proj_conv = nn.Conv2d(
+            embed_dims, embed_dims, kernel_size=3, stride=1, padding=1, bias=False
+        )
         self.rpe_bn = nn.BatchNorm2d(embed_dims)
         self.rpe_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
@@ -127,14 +144,18 @@ class RPEModule(nn.Module):
         T, B, _, H, W = x.shape
 
         # MS shortcut
-        x_feat = x
-        x_feat = x_feat.flatten(0,1).contiguous()
+        x_feat = deepcopy(x)
+        x_feat = x_feat.flatten(0, 1).contiguous()
         # early lif neuron
         x = self.rpe_lif(x)
-        x = x.flatten(0,1).contiguous()
+        if hook is not None:
+            hook[self._get_name() + "_lif"] = x.detach()
+        x = x.flatten(0, 1).contiguous()
         x = self.rpe_proj_conv(x)
         x = self.rpe_bn(x)
-        x = 
+        x = (x + x_feat).reshape(T, B, -1, H, W).contiguous()
+
+        return x, hook
 
 
 class MS_SPS(nn.Module):
@@ -147,6 +168,7 @@ class MS_SPS(nn.Module):
         patch_size,
         pooling_stat="1111",
         spike_mode="lif",
+        backend="torch",
     ) -> None:
         super().__init__()
         self.image_size = [img_size_h, img_size_w]
@@ -174,7 +196,14 @@ class MS_SPS(nn.Module):
             spike_mode=spike_mode,
         )
 
-        self.rpe = RPEModule()
+        self.rpe = RPEModule(
+            embed_dims=embed_dims, spike_mode=spike_mode, backend=backend
+        )
+
+    def forward(self, x: torch.Tensor, hook: dict = None) -> torch.Tensor:
+        x, hook = self.psm(x, hook)
+        x, hook = self.rpe(x, hook)
+        return x, hook
 
 
 if __name__ == "__main__":
