@@ -1,5 +1,5 @@
 from copy import deepcopy
-from sympy import false
+import cupy
 import torch
 import torch.nn as nn
 from spikingjelly.clock_driven.neuron import (
@@ -15,9 +15,7 @@ def get_lif_neuron(tau, mode, backend="torch"):
     if mode == "lif":
         lif = MultiStepLIFNode(tau=tau, detach_reset=True, backend=backend)
     elif mode == "plif":
-        lif = MultiStepParametricLIFNode(
-            init_tau=tau, detach_reset=True, backend=backend
-        )
+        lif = MultiStepParametricLIFNode(init_tau=tau, detach_reset=True, backend=backend)
     else:
         raise ValueError("Invalid lif mode")
     return lif
@@ -90,40 +88,40 @@ class PSModule(nn.Module):
             hook[self._get_name() + "_lif1"] = x.detach()
 
         x = x.flatten(0, 1).contiguous()
-        if self.pooling_stat["0"] == "1":
+        if self.pooling_stat[0] == "1":
             x = self.max_pool(x)
             ratio *= 2
 
         # layer 2
-        x = self.proj_conv2(x.flatten(0, 1))
+        x = self.proj_conv2(x)
         x = self.proj_bn2(x).reshape(T, B, -1, H // ratio, W // ratio).contiguous()
         x = self.proj_lif2(x)
         if hook is not None:
             hook[self._get_name() + "_lif2"] = x.detach()
 
         x = x.flatten(0, 1).contiguous()
-        if self.pooling_stat["1"] == "1":
+        if self.pooling_stat[1] == "1":
             x = self.max_pool(x)
             ratio *= 2
 
         # layer 3
-        x = self.proj_conv3(x.flatten(0, 1))
+        x = self.proj_conv3(x)
         x = self.proj_bn3(x).reshape(T, B, -1, H // ratio, W // ratio).contiguous()
         x = self.proj_lif3(x)
         if hook is not None:
             hook[self._get_name() + "_lif3"] = x.detach()
 
         x = x.flatten(0, 1).contiguous()
-        if self.pooling_stat["2"] == "1":
+        if self.pooling_stat[2] == "1":
             x = self.max_pool(x)
             ratio *= 2
 
         # layer 4
-        x = self.proj_conv4(x.flatten(0, 1))
+        x = self.proj_conv4(x)
         x = self.proj_bn4(x).reshape(T, B, -1, H // ratio, W // ratio).contiguous()
 
         x = x.flatten(0, 1).contiguous()
-        if self.pooling_stat["3"] == "1":
+        if self.pooling_stat[3] == "1":
             x = self.max_pool(x)
             ratio *= 2
 
@@ -134,9 +132,8 @@ class PSModule(nn.Module):
 
 class RPEModule(nn.Module):
     def __init__(self, embed_dims, spike_mode, backend="torch"):
-        self.rpe_proj_conv = nn.Conv2d(
-            embed_dims, embed_dims, kernel_size=3, stride=1, padding=1, bias=False
-        )
+        super().__init__()
+        self.rpe_proj_conv = nn.Conv2d(embed_dims, embed_dims, kernel_size=3, stride=1, padding=1, bias=False)
         self.rpe_bn = nn.BatchNorm2d(embed_dims)
         self.rpe_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
@@ -144,7 +141,7 @@ class RPEModule(nn.Module):
         T, B, _, H, W = x.shape
 
         # MS shortcut
-        x_feat = deepcopy(x)
+        x_feat = x
         x_feat = x_feat.flatten(0, 1).contiguous()
         # early lif neuron
         x = self.rpe_lif(x)
@@ -173,6 +170,7 @@ class MS_SPS(nn.Module):
         super().__init__()
         self.image_size = [img_size_h, img_size_w]
         self.patch_size = to_2tuple(patch_size)
+
         self.pooling_stat = pooling_stat
 
         # assert pooling_stat equivalent to patch size
@@ -181,8 +179,8 @@ class MS_SPS(nn.Module):
 
         self.C = in_channels
         self.H, self.W = (
-            self.image_size[0] // patch_size[0],
-            self.image_size[1] // patch_size[1],
+            self.image_size[0] // self.patch_size[0],
+            self.image_size[1] // self.patch_size[1],
         )  # SPS result : H*W*embed_dims
 
         # PSM module
@@ -191,14 +189,12 @@ class MS_SPS(nn.Module):
             img_size_w=img_size_w,
             in_channels=in_channels,
             embed_dims=embed_dims,
-            patch_size=patch_size,
             pooling_stat=pooling_stat,
             spike_mode=spike_mode,
+            backend=backend,
         )
 
-        self.rpe = RPEModule(
-            embed_dims=embed_dims, spike_mode=spike_mode, backend=backend
-        )
+        self.rpe = RPEModule(embed_dims=embed_dims, spike_mode=spike_mode, backend=backend)
 
     def forward(self, x: torch.Tensor, hook: dict = None) -> torch.Tensor:
         x, hook = self.psm(x, hook)
@@ -207,7 +203,8 @@ class MS_SPS(nn.Module):
 
 
 if __name__ == "__main__":
-    a = get_lif_neuron(2.0, "lif")
-    b = get_lif_neuron(2.0, "alif")
-    print(id(a))
-    print(id(b))
+    T, B, C, H, W = (4, 32, 3, 128, 128)
+    image = torch.rand([T, B, C, H, W], requires_grad=True)
+    SPS = MS_SPS(H, W, C, 512, 16, "1111", "lif", "torch")
+    x = SPS(image)
+    print(x)
