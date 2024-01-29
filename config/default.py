@@ -1,3 +1,4 @@
+from email.policy import default
 import os
 from numpy import add
 import yaml
@@ -12,12 +13,22 @@ def _add_BASE_NODE():
     """basic settings"""
     _C.BASE = [""]
     _C.LOG_LEVEL = logging.INFO
+    # Tag of experiment, (cli, not required)
+    _C.TAG = "default"
+    # Frequency to save checkpoint (cli, not required)
+    _C.SAVE_FREQ = 1
+    # Frequency to logging info (cli, not vrequired)
+    _C.PRINT_FREQ = 10
+    # Path to output folder (cli, required)
+    _C.OUTPUT = ""
+    # Fixed random seed
+    _C.SEED = 0
 
 
 def _add_DATA_NODE():
     """data settings"""
     _C.DATA = CN()
-    # image settings (cli, not required)
+    # image settings (config, not required)
     _C.DATA.IMG_SIZE = 224
     _C.DATA.CHANNELS = 3
 
@@ -83,7 +94,27 @@ def _update_config(config, args):
     _update_config_from_file(config, args.cfg)
 
     config.defrost()
-    
+
+    if args.tag:
+        config.TAG = args.tag
+
+    if args.save_freq:
+        config.SAVE_FREQ = args.save_freq
+
+    if args.print_freq:
+        config.PRINT_FREQ = args.print_freq
+
+    config.OUTPUT = args.output
+
+    if args.batch_size:
+        config.DATA.BATCH_SIZE = args.batch_size
+
+    config.DATA.DATA_PATH = args.data_path
+
+    if args.resume:
+        assert args.resume_path is not None, "resume path must be specified"
+        config.MODEL.RESUME = args.resume
+        config.MODEL.RESUME_PATH = args.resume_path
 
 
 def init_config():
