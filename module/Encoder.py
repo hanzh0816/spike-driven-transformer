@@ -23,18 +23,16 @@ def get_lif_neuron(tau=2.0, mode="lif", backend="torch"):
 class SDSABlock(nn.Module):
     def __init__(
         self,
-        in_dims,
-        hidden_dims,
+        embed_dims,
         num_heads,
         spike_mode="lif",
         backend="torch",
         layer=0,
     ):
         super(SDSABlock, self).__init__()
-        assert hidden_dims % num_heads == 0, f"dim {hidden_dims} should be divided by num_heads {num_heads}."
+        assert embed_dims % num_heads == 0, f"dim {embed_dims} should be divided by num_heads {num_heads}."
 
-        self.in_dims = in_dims
-        self.hidden_dims = hidden_dims
+        self.embed_dims = embed_dims
         self.num_heads = num_heads
         self.spike_mode = spike_mode
         self.layer = layer
@@ -42,16 +40,16 @@ class SDSABlock(nn.Module):
         # MS shortcut require early SN before block
         self.shortcut_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
-        self.q_proj_conv = nn.Conv2d(self.in_dims, self.hidden_dims, kernel_size=1, stride=1, bias=False)
-        self.q_proj_bn = nn.BatchNorm2d(self.hidden_dims)
+        self.q_proj_conv = nn.Conv2d(self.embed_dims, self.embed_dims, kernel_size=1, stride=1, bias=False)
+        self.q_proj_bn = nn.BatchNorm2d(self.embed_dims)
         self.q_proj_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
-        self.k_proj_conv = nn.Conv2d(self.in_dims, self.hidden_dims, kernel_size=1, stride=1, bias=False)
-        self.k_proj_bn = nn.BatchNorm2d(self.hidden_dims)
+        self.k_proj_conv = nn.Conv2d(self.embed_dims, self.embed_dims, kernel_size=1, stride=1, bias=False)
+        self.k_proj_bn = nn.BatchNorm2d(self.embed_dims)
         self.k_proj_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
-        self.v_proj_conv = nn.Conv2d(self.in_dims, self.hidden_dims, kernel_size=1, stride=1, bias=False)
-        self.v_proj_bn = nn.BatchNorm2d(self.hidden_dims)
+        self.v_proj_conv = nn.Conv2d(self.embed_dims, self.embed_dims, kernel_size=1, stride=1, bias=False)
+        self.v_proj_bn = nn.BatchNorm2d(self.embed_dims)
         self.v_proj_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
         # talking-heads
@@ -60,8 +58,8 @@ class SDSABlock(nn.Module):
 
         # output project
         self.out_proj_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
-        self.out_proj_conv = nn.Conv2d(self.hidden_dims, self.hidden_dims, kernel_size=1, stride=1)
-        self.out_proj_bn = nn.BatchNorm2d(self.hidden_dims)
+        self.out_proj_conv = nn.Conv2d(self.embed_dims, self.embed_dims, kernel_size=1, stride=1)
+        self.out_proj_bn = nn.BatchNorm2d(self.embed_dims)
 
     def forward(self, x: torch.Tensor, hook: dict = None):
         T, B, C, H, W = x.shape
@@ -146,8 +144,6 @@ class SDSABlock(nn.Module):
         x = self.out_proj_bn(x)
         x = x.reshape(T, B, C, H, W).contiguous()
 
-        print(x)
-        print(x.equal(identity))
         x = x + identity
         return x, v, hook
 
@@ -178,23 +174,90 @@ class MLPBlock(nn.Module):
         identity = x
 
         x = self.fc1_lif(x)
-        if hook is not None:   
-            hook[self._get_name+]
+        if hook is not None:
+            hook[self._get_name + str(self.layer) + "_fc1_lif"] = x.detach()
+
+        x = self.fc1_conv(x.flatten(0, 1))
+        x = self.fc1_bn(x).reshape(T, B, self.hidden_features, H, W).contiguous()
+
+        if self.res:
+            x = identity + x
+            identity = x
+
+        x = self.fc2_lif(x)
+        if hook is not None:
+            hook[self._get_name + str(self.layer) + "_fc2_lif"] = x.detach()
+        x = self.fc2_conv(x.flatten(0, 1))
+        x = self.fc2_bn(x).reshape(T, B, self.out_features, H, W).contiguous()
+
+        x = x + identity
+        return x, hook
 
 
 class EncoderBlock(nn.Module):
     def __init__(
         self,
+        embed_dims,
+        mlp_ratio,
+        num_heads=8,
+        spike_mode="lif",
+        backend="torch",
+        layer=0,
     ):
-        pass
+        super(EncoderBlock, self).__init__()
+        self.attn = SDSABlock(
+            embed_dims=embed_dims, num_heads=num_heads, spike_mode=spike_mode, backend=backend, layer=layer
+        )
+        # todo: 添加DropPath
+        self.mlp_hidden_dims = int(embed_dims * mlp_ratio)
+        self.mlp = MLPBlock(
+            in_features=embed_dims,
+            out_features=embed_dims,
+            hidden_features=self.mlp_hidden_dims,
+            spike_mode=spike_mode,
+            backend=backend,
+            layer=layer,
+        )
+
+    def forward(self, x: torch.Tensor, hook: dict = None):
+        x_attn, attn, hook = self.attn(x, hook)
+        x, hook = self.mlp(x_attn, hook)
+        return x, attn, hook
 
 
 class Encoder(nn.Module):
-    def __init__(self):
-        pass
+    def __init__(self, embed_dims, mlp_ratio, num_heads=8, spike_mode="lif", backend="torch", depths=4):
+        """
+        Encoder module, including multi-layer encoder-block
+        :return: x[T,B,embed_dims,H,W], hook
+        """
+        super(Encoder, self).__init__()
+        self.blocks = nn.ModuleList(
+            [
+                EncoderBlock(
+                    embed_dims=embed_dims,
+                    mlp_ratio=mlp_ratio,
+                    num_heads=num_heads,
+                    spike_mode=spike_mode,
+                    backend=backend,
+                    layer=i,
+                )
+                for i in range(depths)
+            ]
+        )
+
+    def forward(self, x: torch.Tensor, hook: dict = None):
+        for blk in self.blocks:
+            x, _, hook = blk(x, hook)
+        return x, hook
 
 
 if __name__ == "__main__":
-    sdsa = SDSABlock(512, 512, 8, layer=0)
+    # sdsa = SDSABlock(512, 512, 8, layer=0)
+    encoder = Encoder(512, 0.5)
     T, B, C, H, W = (4, 32, 512, 8, 8)
     x = torch.rand([T, B, C, H, W], requires_grad=True)
+    # x, hook = encoder(x)
+    print(x.shape)
+    x = x.flatten(3).mean(3)
+    print(x.shape)

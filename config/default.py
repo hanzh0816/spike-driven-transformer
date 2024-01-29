@@ -32,22 +32,23 @@ def add_MODEL_NODE():
     """model settings"""
     _C.MODEL = CN()
     # model name (config, required)
-    _C.MODEL_NAME = "sdt"
+    _C.MODEL.NAME = "sdt"
     # num of classesconfig (config, not required)
-    _C.MODEL_NUM_CLASSES = 1000
+    _C.MODEL.NUM_CLASSES = 1000
 
     # transformer settings, (config , not required)
     _C.MODEL.PATCH_SIZE = 16
     _C.MODEL.NUM_HEADS = 8
     # embedding dims
     _C.MODEL.EMBED_DIMS = 512
-    # hidden dims in attention module
-    _C.MODEL.HIDDEN_DIMS = 512
+    # mlp block hidden_dims ratio
+    _C.MODEL.MLP_RATIO = 1.0
     _C.MODEL.NUM_LAYERS = 4
-    _C.MODEL.POOL_STATE = "1111"
+    _C.MODEL.POOL_STAT = "1111"
 
     # LIF settings (config , required)
     _C.MODEL.SPIKE_MODE = "lif"
+    _C.MODEL.SPIKE_T = 4
     _C.MODEL.BACKEND = "torch"
 
     # Checkpoint to resume (cli argument, not required)
@@ -61,3 +62,4 @@ def add_MODEL_NODE():
 def add_TRAIN_NODE():
     """training settings"""
     _C.TRAIN = CN()
+    _C.TRAIN.TET = False

@@ -167,6 +167,10 @@ class MS_SPS(nn.Module):
         spike_mode="lif",
         backend="torch",
     ) -> None:
+        """
+        SPS module
+        :forward return: x[T,B,embed_dims,H,W], hook
+        """
         super().__init__()
         self.image_size = [img_size_h, img_size_w]
         self.patch_size = to_2tuple(patch_size)
@@ -175,6 +179,8 @@ class MS_SPS(nn.Module):
 
         # assert pooling_stat equivalent to patch size
         if 2 ** self.pooling_stat.count("1") != patch_size:
+            print(2 ** self.pooling_stat.count("1"))
+            print(patch_size)
             raise Exception("num of pooling times does not match patch size")
 
         self.C = in_channels
