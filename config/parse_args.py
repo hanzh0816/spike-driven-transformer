@@ -13,6 +13,7 @@ def parse_option():
 
     # data settings
     parser.add_argument("--batch_size", type=int, help="batch size for single GPU")
+    parser.add_argument("--dataset", type=str, required=True, metavar="DATASET", help="dataset name to use")
     parser.add_argument("--data_path", type=str, required=True, metavar="DATA_PATH", help="path to dataset")
     parser.add_argument("--resume", type=bool, help="resume from checkpoint")
     parser.add_argument("--resume_path", type=str, help="resume path ")
