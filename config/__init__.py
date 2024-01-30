@@ -1,1 +1,1 @@
-from .default import get_config
+from .parse_args import parse_option

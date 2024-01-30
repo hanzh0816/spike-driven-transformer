@@ -9,16 +9,52 @@ from timm.data import Mixup
 from timm.data import create_transform
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.models.layers import to_2tuple
-import torch.utils.data
+import torch.utils.data.dataloader
 
 
-def build_transform(is_train, config):
-    pass
+def _build_transform(is_train, config):
+    if is_train:
+        transform = create_transform(
+            input_size=config.DATA.IMG_SIZE,
+            is_training=True,
+            color_jitter=config.AUG.COLOR_JITTER,
+            auto_augment=config.AUG.AUTO_AUGMENT,
+            re_prob=config.AUG.REPROB,
+            re_mode=config.AUG.REMODE,
+            re_count=config.AUG.RECOUNT,
+            interpolation=config.DATA.INTERPOLATION,
+        )
+        return transform
+
+    t = []
+
+    t.append(transforms.ToTensor())
+    t.append(transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD))
+    return transforms.Compose(t)
 
 
-def build_dataset(is_train, config):
-    pass
+def _build_dataset(is_train, config):
+    transform = _build_transform(is_train, config)
+    prefix = "train" if is_train else "val"
+    root = os.path.join(config.DATA.DATA_PATH, prefix)
+    dataset = datasets.ImageFolder(root, transform=transform)  # type: ignore
+    return dataset
 
 
 def build_imagenet_loader(config):
-    pass
+    dataset_train = _build_dataset(is_train=True, config=config)
+    dataset_val = _build_dataset(is_train=False, config=config)
+
+    dataloader_train = torch.utils.data.dataloader.DataLoader(
+        dataset=dataset_train,
+        shuffle=True,
+        drop_last=True,
+    )
+
+    dataloader_val = torch.utils.data.dataloader.DataLoader(
+        dataset=dataset_val,
+        shuffle=True,
+        drop_last=True,
+    )
+
+    return dataset_train, dataset_val, dataloader_train, dataloader_val

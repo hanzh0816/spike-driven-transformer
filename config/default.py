@@ -23,6 +23,8 @@ def _add_BASE_NODE():
     _C.OUTPUT = ""
     # Fixed random seed
     _C.SEED = 0
+    # eval mode (cli, not required)
+    _C.EVAL_MODE = False
 
 
 def _add_DATA_NODE():
@@ -74,7 +76,19 @@ def _add_MODEL_NODE():
 def _add_TRAIN_NODE():
     """training settings"""
     _C.TRAIN = CN()
+
+    # Training method
     _C.TRAIN.TET = False
+
+    # Optimizer
+    _C.TRAIN.OPT = "sgd"
+    _C.TRAIN.LR = 0.01
+    _C.TRAIN.WEIGHT_DECAY = False
+    _C.TRAIN.MOMENTUM = 0.9
+    _C.TRAIN.SCHED = "step"
+
+    # training parameters
+    _C.TRAIN.EPOCHS = 200
 
 
 def _update_config_from_file(config, cfg_file):
@@ -95,26 +109,42 @@ def _update_config(config, args):
 
     config.defrost()
 
+    # output
     if args.tag:
         config.TAG = args.tag
-
     if args.save_freq:
         config.SAVE_FREQ = args.save_freq
-
     if args.print_freq:
         config.PRINT_FREQ = args.print_freq
-
     config.OUTPUT = args.output
+    config.OUTPUT = os.path.join(config.OUTPUT, config.MODEL.NAME, config.TAG)
 
+    # data
     if args.batch_size:
         config.DATA.BATCH_SIZE = args.batch_size
-
     config.DATA.DATA_PATH = args.data_path
 
+    # resume
     if args.resume:
         assert args.resume_path is not None, "resume path must be specified"
         config.MODEL.RESUME = args.resume
         config.MODEL.RESUME_PATH = args.resume_path
+
+    # model
+    if args.eval:
+        config.EVAL_MODE = args.eval
+
+    # training
+    if args.opt:
+        config.TRAIN.OPT = args.opt
+    if args.lr:
+        config.TRAIN.LR = args.lr
+    if args.momentum:
+        config.TRAIN.MOMENTUM = args.momentum
+    if args.sched:
+        config.TRAIN.SCHED = args.sched
+    if args.epochs:
+        config.TRAIN.EPOCHS = args.epochs
 
 
 def init_config():

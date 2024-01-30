@@ -1,2 +1,2 @@
 from .set_logger import set_logger
-from .parse_args import parse_option
+from .train_utils import init_seed
