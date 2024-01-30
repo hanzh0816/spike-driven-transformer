@@ -1,6 +1,6 @@
 import argparse
 import numpy as np
-from default import get_config
+from .default import get_config
 
 
 def parse_option():
