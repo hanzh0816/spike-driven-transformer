@@ -151,6 +151,8 @@ def _update_config(config, args):
     if args.epochs:
         config.TRAIN.EPOCHS = args.epochs
 
+    return config
+
 
 def init_config():
     _add_BASE_NODE()
