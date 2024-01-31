@@ -1,1 +1,1 @@
-accelerate launch main.py --cfg configs/temp-train.yaml --dataset imagenet --data_path /data1/hzh/imagenet --batch_size 4 --output output 
+accelerate launch main.py --cfg config/temp-train.yaml --dataset imagenet --data_path /data1/hzh/imagenet --batch_size 4 --output output 
