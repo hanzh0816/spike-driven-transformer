@@ -1,2 +1,5 @@
 MODEL:
   NAME: sdt-base
+
+DATA:
+  DATASET: imagenet
