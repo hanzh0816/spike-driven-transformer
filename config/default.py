@@ -88,6 +88,7 @@ def _add_TRAIN_NODE():
     _C.TRAIN.SCHED = "step"
 
     # training parameters
+    _C.TRAIN.START_EPOCH = 0
     _C.TRAIN.EPOCHS = 200
 
 
