@@ -17,12 +17,6 @@ def _build_transform(is_train, config):
         transform = create_transform(
             input_size=config.DATA.IMG_SIZE,
             is_training=True,
-            color_jitter=config.AUG.COLOR_JITTER,
-            auto_augment=config.AUG.AUTO_AUGMENT,
-            re_prob=config.AUG.REPROB,
-            re_mode=config.AUG.REMODE,
-            re_count=config.AUG.RECOUNT,
-            interpolation=config.DATA.INTERPOLATION,
         )
         return transform
 
