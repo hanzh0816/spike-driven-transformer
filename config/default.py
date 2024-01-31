@@ -116,8 +116,13 @@ def _update_config(config, args):
         config.SAVE_FREQ = args.save_freq
     if args.print_freq:
         config.PRINT_FREQ = args.print_freq
+    print("================================")
+    print(f"arg value: {args.output} , arg type: {type(args.output)}")
     config.OUTPUT = args.output
+    print(f"config value: {config.OUTPUT }")
     config.OUTPUT = os.path.join(config.OUTPUT, config.MODEL.NAME, config.TAG)
+    print(f"config value: {config.OUTPUT }")
+    print("================================")
 
     # data
     if args.batch_size:
@@ -161,4 +166,5 @@ def get_config(args):
     init_config()
     config = _C.clone()
     config = _update_config(config, args)
+    config.freeze()
     return config
