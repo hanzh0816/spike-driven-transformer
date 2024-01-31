@@ -90,7 +90,7 @@ def train_one_epoch(accelerator, config, model, criterion, data_loader, optimize
         labels = labels.to(device)
         optimizer.zero_grad()
 
-        outputs = model(inputs)
+        outputs, _ = model(inputs)
 
         loss = criterion(outputs, labels.long())
         # loss.backward()
