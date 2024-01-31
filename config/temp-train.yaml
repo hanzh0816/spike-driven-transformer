@@ -3,3 +3,5 @@ MODEL:
 
 DATA:
   DATASET: imagenet
+  IMG_SIZE: 224
+  CHANNELS: 3
