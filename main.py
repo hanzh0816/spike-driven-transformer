@@ -20,7 +20,7 @@ from utils import set_logger, init_seed
 def main(accelerator: Accelerator, args, config, logger):
     _, _, data_loader_train, data_loader_val = build_loader(config)
 
-    logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
+    logger.info(f"Creating model:{config.MODEL.NAME}")
     model = build_model(config)
 
     # use timm.optim to create specific optimizer
