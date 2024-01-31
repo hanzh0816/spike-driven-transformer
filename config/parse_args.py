@@ -35,6 +35,7 @@ def parse_option():
         "--opt", default="sgd", type=str, metavar="OPTIMIZER", help='Optimizer (default: "sgd")'
     )
     parser.add_argument("--lr", type=float, default=0.01, metavar="LR", help="learning rate (default: 0.01)")
+    parser.add_argument("--weight_decay", type=float, default=0.0001, help="weight decay (default: 0.0001)")
     parser.add_argument(
         "--momentum", type=float, default=0.9, metavar="M", help="Optimizer momentum (default: 0.9)"
     )

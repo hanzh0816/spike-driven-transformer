@@ -144,6 +144,8 @@ def _update_config(config, args):
         config.TRAIN.OPT = args.opt
     if args.lr:
         config.TRAIN.LR = args.lr
+    if args.weight_decay:
+        config.TRAIN.WEIGHT_DECAY = args.weight_decay
     if args.momentum:
         config.TRAIN.MOMENTUM = args.momentum
     if args.sched:
