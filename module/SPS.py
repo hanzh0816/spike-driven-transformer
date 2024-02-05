@@ -203,8 +203,8 @@ class MS_SPS(nn.Module):
         self.rpe = RPEModule(embed_dims=embed_dims, spike_mode=spike_mode, backend=backend)
 
     def forward(self, x: torch.Tensor, hook = None):
-        x, hook = self.psm(x, hook)
-        x, hook = self.rpe(x, hook)
+        x = self.psm(x)
+        x = self.rpe(x)
         return x
 
 

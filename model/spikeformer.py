@@ -62,11 +62,11 @@ class SpikeDrivenTransformer(nn.Module):
         else:
             x = x.transpose(0, 1).contiguous()
 
-        x, hook = self.patch_embed(x, hook)
-        x, hook = self.encoder(x, hook)
+        x = self.patch_embed(x)
+        x = self.encoder(x)
 
         x = x.flatten(3).mean(3)  # T,B,C,H,W -> T,B,C
-        x, hook = self.decoder(x, hook)
+        x = self.decoder(x)
 
         if not self.TET:
             x = x.mean(0)  # T,B,num_classes -> B,num_classes

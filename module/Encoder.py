@@ -220,8 +220,8 @@ class EncoderBlock(nn.Module):
         )
 
     def forward(self, x: torch.Tensor, hook = None):
-        x_attn, attn, hook = self.attn(x, hook)
-        x, hook = self.mlp(x_attn, hook)
+        x_attn, attn, hook = self.attn(x)
+        x = self.mlp(x_attn, hook)
         return x, attn, hook
 
 
@@ -248,7 +248,7 @@ class Encoder(nn.Module):
 
     def forward(self, x: torch.Tensor, hook = None):
         for blk in self.blocks:
-            x, _, hook = blk(x, hook)
+            x, _, hook = blk(x)
         return x
 
 
@@ -257,6 +257,6 @@ if __name__ == "__main__":
     encoder = Encoder(512, 0.5)
     T, B, C, H, W = (4, 32, 512, 8, 8)
     x = torch.rand([T, B, C, H, W], requires_grad=True)
-    x, hook = encoder(x)
+    x = encoder(x)
     
     
