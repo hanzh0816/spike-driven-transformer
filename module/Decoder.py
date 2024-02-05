@@ -26,10 +26,10 @@ class Decoder(nn.Module):
         self.head_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
         self.head = nn.Linear(embed_dims, num_classes) if num_classes > 0 else nn.Identity()
 
-    def forward(self, x: torch.Tensor, hook: dict = None):
+    def forward(self, x: torch.Tensor, hook = None):
         # x.shape [T,B,C]
         x = self.head_lif(x)
         if hook is not None:
             hook["head_lif"] = x.detach()
         x = self.head(x)
-        return x, hook
+        return x

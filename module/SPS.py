@@ -76,7 +76,7 @@ class PSModule(nn.Module):
         # max pool layer, MP is unlearnable
         self.max_pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
-    def forward(self, x: torch.Tensor, hook: dict = None):
+    def forward(self, x: torch.Tensor, hook = None):
         T, B, _, H, W = x.shape
         ratio = 1
 
@@ -127,7 +127,7 @@ class PSModule(nn.Module):
 
         x = x.reshape(T, B, -1, H // ratio, W // ratio).contiguous()
 
-        return x, hook
+        return x
 
 
 class RPEModule(nn.Module):
@@ -137,7 +137,7 @@ class RPEModule(nn.Module):
         self.rpe_bn = nn.BatchNorm2d(embed_dims)
         self.rpe_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
-    def forward(self, x: torch.Tensor, hook: dict = None):
+    def forward(self, x: torch.Tensor, hook = None):
         T, B, _, H, W = x.shape
 
         # MS shortcut
@@ -152,7 +152,7 @@ class RPEModule(nn.Module):
         x = self.rpe_bn(x)
         x = (x + x_feat).reshape(T, B, -1, H, W).contiguous()
 
-        return x, hook
+        return x
 
 
 class MS_SPS(nn.Module):
@@ -202,10 +202,10 @@ class MS_SPS(nn.Module):
 
         self.rpe = RPEModule(embed_dims=embed_dims, spike_mode=spike_mode, backend=backend)
 
-    def forward(self, x: torch.Tensor, hook: dict = None):
+    def forward(self, x: torch.Tensor, hook = None):
         x, hook = self.psm(x, hook)
         x, hook = self.rpe(x, hook)
-        return x, hook
+        return x
 
 
 if __name__ == "__main__":

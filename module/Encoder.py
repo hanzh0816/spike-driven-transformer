@@ -61,7 +61,7 @@ class SDSABlock(nn.Module):
         self.out_proj_conv = nn.Conv2d(self.embed_dims, self.embed_dims, kernel_size=1, stride=1)
         self.out_proj_bn = nn.BatchNorm2d(self.embed_dims)
 
-    def forward(self, x: torch.Tensor, hook: dict = None):
+    def forward(self, x: torch.Tensor, hook = None):
         T, B, C, H, W = x.shape
 
         assert C % self.num_heads == 0, f"dim {C} should be divided by num_heads {self.num_heads}."
@@ -169,7 +169,7 @@ class MLPBlock(nn.Module):
 
         self.layer = layer
 
-    def forward(self, x: torch.Tensor, hook: dict = None):
+    def forward(self, x: torch.Tensor, hook = None):
         T, B, C, H, W = x.shape
         identity = x
 
@@ -191,7 +191,7 @@ class MLPBlock(nn.Module):
         x = self.fc2_bn(x).reshape(T, B, self.out_features, H, W).contiguous()
 
         x = x + identity
-        return x, hook
+        return x
 
 
 class EncoderBlock(nn.Module):
@@ -219,7 +219,7 @@ class EncoderBlock(nn.Module):
             layer=layer,
         )
 
-    def forward(self, x: torch.Tensor, hook: dict = None):
+    def forward(self, x: torch.Tensor, hook = None):
         x_attn, attn, hook = self.attn(x, hook)
         x, hook = self.mlp(x_attn, hook)
         return x, attn, hook
@@ -246,10 +246,10 @@ class Encoder(nn.Module):
             ]
         )
 
-    def forward(self, x: torch.Tensor, hook: dict = None):
+    def forward(self, x: torch.Tensor, hook = None):
         for blk in self.blocks:
             x, _, hook = blk(x, hook)
-        return x, hook
+        return x
 
 
 if __name__ == "__main__":

@@ -70,6 +70,6 @@ class SpikeDrivenTransformer(nn.Module):
 
         if not self.TET:
             x = x.mean(0)  # T,B,num_classes -> B,num_classes
-        return x, hook
+        return x
 
     # todo: implement init weights
