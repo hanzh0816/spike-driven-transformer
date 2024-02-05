@@ -1,23 +1,57 @@
 import os
-import torch
-import torch.nn as nn
-from model import SpikeDrivenTransformer
+import time
+import datetime
+from tqdm import tqdm
+import torch.nn.functional as F
 
-os.chdir(os.path.dirname(__file__))
-T, B, C, H, W = (4, 32, 3, 128, 128)
-x = torch.rand([B, T, C, H, W], requires_grad=True)
-sdt = SpikeDrivenTransformer(
-    img_size_h=128,
-    img_size_w=128,
-    patch_size=16,
-    in_channels=3,
-    embed_dims=512,
-    mlp_ratio=0.8,
-    num_heads=8,
-    num_classes=1000,
-    spike_T=4,
-    TET=False,
-)
-hook = None
-x, hook = sdt(x, hook)
-print(x.shape)
+import torch
+from accelerate import Accelerator
+import torch.nn as nn
+from timm.optim import create_optimizer
+from timm.scheduler import create_scheduler
+from timm.utils import accuracy, AverageMeter
+
+from datasets import build_loader
+from model import build_model
+from config import parse_option
+from utils import set_logger, init_seed
+
+
+def test(args, config, logger):
+    _, _, data_loader_train, data_loader_val = build_loader(config)
+
+    logger.info(f"Creating model:{config.MODEL.NAME}")
+    model = build_model(config)
+    model.to(device)
+    # use timm.optim to create specific optimizer
+    optimizer = create_optimizer(args=args, model=model)
+
+    criterion = nn.CrossEntropyLoss()
+    model.train()
+    optimizer.zero_grad()
+
+    t = tqdm(data_loader_train)
+    t.set_description("Processing:")
+
+    for idx, (inputs, labels) in enumerate(t):
+
+        labels = labels.to(device)
+        optimizer.zero_grad()
+
+        outputs, _ = model(inputs)
+
+        loss = criterion(outputs, labels.long())
+        loss.backward()
+        optimizer.step()
+
+
+if __name__ == "__main__":
+    os.chdir(os.path.dirname(__file__))
+    device = "cuda:4"
+    args, config = parse_option()
+    logger = set_logger(config=config)
+    init_seed(config)
+
+    test(args, config, logger)
+
+    # main(accelerator, args, config, logger)
