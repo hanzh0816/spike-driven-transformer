@@ -56,7 +56,7 @@ class SpikeDrivenTransformer(nn.Module):
             embed_dims=embed_dims, num_classes=num_classes, spike_mode=spike_mode, backend=backend
         )
 
-    def forward(self, x: torch.Tensor, hook: dict | None = None):
+    def forward(self, x: torch.Tensor, hook=None):
         if len(x.shape) < 5:
             x = (x.unsqueeze(0)).repeat(self.spike_T, 1, 1, 1, 1)
         else:
