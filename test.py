@@ -41,7 +41,7 @@ def test(args, config, logger):
         outputs, _ = model(inputs)
 
         loss = criterion(outputs, labels.long())
-        loss.backward()
+        loss.backward(retain_graph=True)
         optimizer.step()
 
 
