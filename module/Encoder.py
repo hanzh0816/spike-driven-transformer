@@ -145,7 +145,7 @@ class SDSABlock(nn.Module):
         x = x.reshape(T, B, C, H, W).contiguous()
 
         x = x + identity
-        return x, v, hook
+        return x
 
 
 class MLPBlock(nn.Module):
@@ -220,9 +220,9 @@ class EncoderBlock(nn.Module):
         )
 
     def forward(self, x: torch.Tensor, hook=None):
-        x_attn, attn, hook = self.attn(x)
-        x = self.mlp(x_attn, hook)
-        return x, attn, hook
+        x_attn = self.attn(x)
+        x = self.mlp(x_attn)
+        return x
 
 
 class Encoder(nn.Module):
@@ -248,13 +248,24 @@ class Encoder(nn.Module):
 
     def forward(self, x: torch.Tensor, hook=None):
         for blk in self.blocks:
-            x, _, hook = blk(x)
+            x = blk(x)
+
         return x
 
 
 if __name__ == "__main__":
     # sdsa = SDSABlock(512, 512, 8, layer=0)
-    encoder = Encoder(512, 0.5)
+    model = Encoder(512, 0.5)
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+    )
+    criterion = nn.CrossEntropyLoss()
+
     T, B, C, H, W = (4, 32, 512, 8, 8)
     x = torch.rand([T, B, C, H, W], requires_grad=True)
-    x = encoder(x)
+    y = torch.rand([B, 100])
+    x = model(x)
+    optimizer.zero_grad()
+    loss = criterion(x, y)
+    loss.backward()
+    optimizer.step()

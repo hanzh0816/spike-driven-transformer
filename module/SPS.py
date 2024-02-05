@@ -76,7 +76,7 @@ class PSModule(nn.Module):
         # max pool layer, MP is unlearnable
         self.max_pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
-    def forward(self, x: torch.Tensor, hook = None):
+    def forward(self, x: torch.Tensor, hook=None):
         T, B, _, H, W = x.shape
         ratio = 1
 
@@ -137,7 +137,7 @@ class RPEModule(nn.Module):
         self.rpe_bn = nn.BatchNorm2d(embed_dims)
         self.rpe_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
-    def forward(self, x: torch.Tensor, hook = None):
+    def forward(self, x: torch.Tensor, hook=None):
         T, B, _, H, W = x.shape
 
         # MS shortcut
@@ -202,7 +202,7 @@ class MS_SPS(nn.Module):
 
         self.rpe = RPEModule(embed_dims=embed_dims, spike_mode=spike_mode, backend=backend)
 
-    def forward(self, x: torch.Tensor, hook = None):
+    def forward(self, x: torch.Tensor, hook=None):
         x = self.psm(x)
         x = self.rpe(x)
         return x
@@ -211,6 +211,15 @@ class MS_SPS(nn.Module):
 if __name__ == "__main__":
     T, B, C, H, W = (4, 32, 3, 128, 128)
     image = torch.rand([T, B, C, H, W], requires_grad=True)
-    SPS = MS_SPS(H, W, C, 512, 16, "1111", "lif", "torch")
-    x, _ = SPS(image)
-    print(x.shape)
+    y = torch.rand([B, 100])
+
+    model = MS_SPS(H, W, C, 512, 16, "1111", "lif", "torch")
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+    )
+    criterion = nn.CrossEntropyLoss()
+    x = model(image)
+    optimizer.zero_grad()
+    loss = criterion(x, y)
+    loss.backward()
+    optimizer.step()

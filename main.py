@@ -3,6 +3,7 @@ import time
 import datetime
 from tqdm import tqdm
 import torch.nn.functional as F
+from spikingjelly.clock_driven import functional
 
 import torch
 from accelerate import Accelerator
@@ -90,12 +91,14 @@ def train_one_epoch(accelerator, config, model, criterion, data_loader, optimize
         labels = labels.to(device)
         optimizer.zero_grad()
 
-        outputs, _ = model(inputs)
+        outputs = model(inputs)
 
         loss = criterion(outputs, labels.long())
         # loss.backward()
         accelerator.backward(loss)
         optimizer.step()
+
+        functional.reset_net(model)
 
         loss_meter.update(loss.item(), labels.size(0))
         batch_time.update(time.time() - end)
@@ -129,6 +132,8 @@ def validate(config, model, data_loader):
         labels = labels.to(device)
 
         outputs = model(inputs)
+        functional.reset_net(model)
+
         [acc1] = accuracy(outputs, labels)
         acc1_meter.update(acc1.item(), labels.size(0))
         # acc5_meter.update(acc5.item(), target.size(0))
@@ -147,39 +152,6 @@ def validate(config, model, data_loader):
     return acc1_meter.avg
 
 
-def test(accelerator, args, config, logger):
-    _, _, data_loader_train, data_loader_val = build_loader(config)
-
-    logger.info(f"Creating model:{config.MODEL.NAME}")
-    model = build_model(config)
-
-    # use timm.optim to create specific optimizer
-    optimizer = create_optimizer(args=args, model=model)
-
-    lr_scheduler, num_epochs = create_scheduler(args, optimizer)
-
-    # prepare
-    data_loader_train, model, optimizer = accelerator.prepare(data_loader_train, model, optimizer)
-    criterion = nn.CrossEntropyLoss()
-    model.train()
-    optimizer.zero_grad()
-
-    t = tqdm(data_loader_train, disable=not accelerator.is_main_process)
-    t.set_description("Processing:")
-
-    for idx, (inputs, labels) in enumerate(t):
-
-        labels = labels.to(device)
-        optimizer.zero_grad()
-
-        outputs, _ = model(inputs)
-
-        loss = criterion(outputs, labels.long())
-        # loss.backward()
-        accelerator.backward(loss)
-        optimizer.step()
-
-
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     accelerator = Accelerator()
@@ -189,6 +161,4 @@ if __name__ == "__main__":
     logger = set_logger(config=config)
     init_seed(config)
 
-    test(accelerator, args, config, logger)
-
-    # main(accelerator, args, config, logger)
+    main(accelerator, args, config, logger)
