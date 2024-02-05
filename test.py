@@ -34,7 +34,7 @@ def test(args, config, logger):
     t.set_description("Processing:")
 
     for idx, (inputs, labels) in enumerate(t):
-
+        inputs = inputs.to(device)
         labels = labels.to(device)
         optimizer.zero_grad()
 
