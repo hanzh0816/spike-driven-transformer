@@ -52,8 +52,8 @@ class SDSABlock(nn.Module):
         self.v_proj_bn = nn.BatchNorm2d(self.embed_dims)
         self.v_proj_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
-        # talking-heads
-        self.talking_heads_proj = nn.Conv1d(num_heads, num_heads, kernel_size=1, stride=1, bias=False)
+        # todo: talking-heads
+        # self.talking_heads_proj = nn.Conv1d(num_heads, num_heads, kernel_size=1, stride=1, bias=False)
         self.talking_heads_proj_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
         # output project
@@ -61,7 +61,7 @@ class SDSABlock(nn.Module):
         self.out_proj_conv = nn.Conv2d(self.embed_dims, self.embed_dims, kernel_size=1, stride=1)
         self.out_proj_bn = nn.BatchNorm2d(self.embed_dims)
 
-    def forward(self, x: torch.Tensor, hook = None):
+    def forward(self, x: torch.Tensor, hook=None):
         T, B, C, H, W = x.shape
 
         assert C % self.num_heads == 0, f"dim {C} should be divided by num_heads {self.num_heads}."
@@ -158,7 +158,7 @@ class MLPBlock(nn.Module):
         self.res = in_features == hidden_features
 
         self.fc1_conv = nn.Conv2d(in_features, self.hidden_features, kernel_size=1, stride=1, bias=False)
-        self.fc1_bn = nn.BatchNorm2d(hidden_features)
+        self.fc1_bn = nn.BatchNorm2d(self.hidden_features)
         self.fc1_lif = get_lif_neuron(tau=2.0, mode=spike_mode, backend=backend)
 
         self.fc2_conv = nn.Conv2d(
@@ -169,13 +169,13 @@ class MLPBlock(nn.Module):
 
         self.layer = layer
 
-    def forward(self, x: torch.Tensor, hook = None):
+    def forward(self, x: torch.Tensor, hook=None):
         T, B, C, H, W = x.shape
         identity = x
 
         x = self.fc1_lif(x)
         if hook is not None:
-            hook[self._get_name + str(self.layer) + "_fc1_lif"] = x.detach()
+            hook[self._get_name() + str(self.layer) + "_fc1_lif"] = x.detach()
 
         x = self.fc1_conv(x.flatten(0, 1))
         x = self.fc1_bn(x).reshape(T, B, self.hidden_features, H, W).contiguous()
@@ -186,7 +186,7 @@ class MLPBlock(nn.Module):
 
         x = self.fc2_lif(x)
         if hook is not None:
-            hook[self._get_name + str(self.layer) + "_fc2_lif"] = x.detach()
+            hook[self._get_name() + str(self.layer) + "_fc2_lif"] = x.detach()
         x = self.fc2_conv(x.flatten(0, 1))
         x = self.fc2_bn(x).reshape(T, B, self.out_features, H, W).contiguous()
 
@@ -219,7 +219,7 @@ class EncoderBlock(nn.Module):
             layer=layer,
         )
 
-    def forward(self, x: torch.Tensor, hook = None):
+    def forward(self, x: torch.Tensor, hook=None):
         x_attn, attn, hook = self.attn(x)
         x = self.mlp(x_attn, hook)
         return x, attn, hook
@@ -246,7 +246,7 @@ class Encoder(nn.Module):
             ]
         )
 
-    def forward(self, x: torch.Tensor, hook = None):
+    def forward(self, x: torch.Tensor, hook=None):
         for blk in self.blocks:
             x, _, hook = blk(x)
         return x
@@ -258,5 +258,3 @@ if __name__ == "__main__":
     T, B, C, H, W = (4, 32, 512, 8, 8)
     x = torch.rand([T, B, C, H, W], requires_grad=True)
     x = encoder(x)
-    
-    

@@ -38,15 +38,14 @@ def test(args, config, logger):
         labels = labels.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
 
-        for name, param in model.named_parameters():
-            if param.grad is None:
-                print(name)
-        break
-        # loss = criterion(outputs, labels.long())
-        # optimizer.step()
+        # for name, param in model.named_parameters():
+        #     if param.grad is None:
+        #         print(name)
+        # break
+        loss = criterion(outputs, labels.long())
+        loss.backward()
+        optimizer.step()
 
 
 if __name__ == "__main__":
