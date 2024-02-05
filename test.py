@@ -36,9 +36,9 @@ def test(args, config, logger):
     for idx, (inputs, labels) in enumerate(t):
         inputs = inputs.to(device)
         labels = labels.to(device)
-        optimizer.zero_grad()
         outputs = model(inputs)
 
+        optimizer.zero_grad()
         # for name, param in model.named_parameters():
         #     if param.grad is None:
         #         print(name)
