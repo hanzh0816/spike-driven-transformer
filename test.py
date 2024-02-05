@@ -37,7 +37,7 @@ def test(args, config, logger):
         inputs = inputs.to(device)
         labels = labels.to(device)
         optimizer.zero_grad()
-        outputs, _ = model(inputs)
+        outputs = model(inputs)[0]
         loss = criterion(outputs, labels)
 
         for name, param in model.named_parameters():
