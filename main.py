@@ -160,7 +160,7 @@ def test(accelerator, args, config, logger):
 
     # prepare
     data_loader_train, model, optimizer = accelerator.prepare(data_loader_train, model, optimizer)
-
+    criterion = nn.CrossEntropyLoss()
     model.train()
     optimizer.zero_grad()
 
@@ -174,7 +174,7 @@ def test(accelerator, args, config, logger):
 
         outputs, _ = model(inputs)
 
-        loss = optimizer(outputs, labels.long())
+        loss = criterion(outputs, labels.long())
         # loss.backward()
         accelerator.backward(loss)
         optimizer.step()
