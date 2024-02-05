@@ -147,6 +147,39 @@ def validate(config, model, data_loader):
     return acc1_meter.avg
 
 
+def test(accelerator, args, config, logger):
+    _, _, data_loader_train, data_loader_val = build_loader(config)
+
+    logger.info(f"Creating model:{config.MODEL.NAME}")
+    model = build_model(config)
+
+    # use timm.optim to create specific optimizer
+    optimizer = create_optimizer(args=args, model=model)
+
+    lr_scheduler, num_epochs = create_scheduler(args, optimizer)
+
+    # prepare
+    data_loader_train, model, optimizer = accelerator.prepare(data_loader_train, model, optimizer)
+
+    model.train()
+    optimizer.zero_grad()
+
+    t = tqdm(data_loader_train, disable=not accelerator.is_main_process)
+    t.set_description("Processing:")
+
+    for idx, (inputs, labels) in enumerate(t):
+
+        labels = labels.to(device)
+        optimizer.zero_grad()
+
+        outputs, _ = model(inputs)
+
+        loss = optimizer(outputs, labels.long())
+        # loss.backward()
+        accelerator.backward(loss)
+        optimizer.step()
+
+
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     accelerator = Accelerator()
@@ -156,4 +189,6 @@ if __name__ == "__main__":
     logger = set_logger(config=config)
     init_seed(config)
 
-    main(accelerator, args, config, logger)
+    test(accelerator, args, config, logger)
+
+    # main(accelerator, args, config, logger)
