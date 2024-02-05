@@ -257,7 +257,6 @@ if __name__ == "__main__":
     encoder = Encoder(512, 0.5)
     T, B, C, H, W = (4, 32, 512, 8, 8)
     x = torch.rand([T, B, C, H, W], requires_grad=True)
-    # x, hook = encoder(x)
-    print(x.shape)
-    x = x.flatten(3).mean(3)
-    print(x.shape)
+    x, hook = encoder(x)
+    
+    
