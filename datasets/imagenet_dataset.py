@@ -24,6 +24,7 @@ def _build_transform(is_train, config):
 
     t.append(transforms.ToTensor())
     t.append(transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD))
+    t.append(transforms.Resize(size=to_2tuple(config.DATA.IMG_SIZE)))
     return transforms.Compose(t)
 
 
