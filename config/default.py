@@ -198,7 +198,7 @@ def _update_config(config, args):
         config.OPTIMIZER.BETAS = args.opt_betas
     if args.momentum:
         config.OPTIMIZER.MOMENTUM = args.momentum
-    if args.weight_dacay:
+    if args.weight_decay:
         config.OPTIMIZER.WEIGHT_DECAY = args.weight_decay
     if args.clip_grad:
         config.OPTIMIZER.CLIP_GRAD = args.clip_grad
