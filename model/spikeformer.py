@@ -9,6 +9,8 @@ from spikingjelly.clock_driven.neuron import (
 
 from module import MS_SPS, Encoder, Decoder
 
+from timm.models.layers import trunc_normal_
+
 
 class SpikeDrivenTransformer(nn.Module):
     def __init__(
@@ -53,8 +55,13 @@ class SpikeDrivenTransformer(nn.Module):
         )
 
         self.decoder = Decoder(
-            embed_dims=embed_dims, num_classes=num_classes, spike_mode=spike_mode, backend=backend
+            embed_dims=embed_dims,
+            num_classes=num_classes,
+            spike_mode=spike_mode,
+            backend=backend,
         )
+
+        self.apply(self._init_weights)
 
     def forward(self, x: torch.Tensor, hook=None):
         if len(x.shape) < 5:
@@ -72,5 +79,11 @@ class SpikeDrivenTransformer(nn.Module):
             x = x.mean(0)  # T,B,num_classes -> B,num_classes
         return x
 
-    # todo: implement init weights
-
+    def _init_weights(self, m):
+        if isinstance(m, nn.Conv2d):
+            trunc_normal_(m.weight, std=0.02)
+            if m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.BatchNorm2d):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)

@@ -7,6 +7,7 @@ from spikingjelly.clock_driven import functional
 
 import torch
 from accelerate import Accelerator
+
 import torch.nn as nn
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
@@ -15,7 +16,7 @@ from timm.utils import accuracy, AverageMeter
 from datasets import build_loader
 from model import build_model
 from config import parse_option
-from utils import set_logger, init_seed
+from utils import set_logger, init_seed, create_loss_fn
 
 
 def main(accelerator: Accelerator, args, config, logger):
@@ -27,17 +28,27 @@ def main(accelerator: Accelerator, args, config, logger):
     # use timm.optim to create specific optimizer
     optimizer = create_optimizer(args=args, model=model)
 
+    # use timm.scheduler to create specific lr scheduler
     lr_scheduler, num_epochs = create_scheduler(args, optimizer)
+    start_epoch = config.TRAIN.START_EPOCH
+    if lr_scheduler is not None and start_epoch > 0:
+        lr_scheduler.step(start_epoch)
+
+    # create criterion
+    train_loss_fn = create_loss_fn(config)
+    train_loss_fn = train_loss_fn.cuda()
+    validate_loss_fn = nn.CrossEntropyLoss().cuda()
 
     # prepare
-    data_loader_train, model, optimizer = accelerator.prepare(data_loader_train, model, optimizer)
+    data_loader_train, model, optimizer, lr_scheduler = accelerator.prepare(
+        data_loader_train, model, optimizer, lr_scheduler
+    )
 
     # resume checkpoint
     if config.MODEL.RESUME:
         # todo: 添加resume checkpoint
         pass
 
-    criterion = nn.CrossEntropyLoss()
     logger.info("Start training")
     start_time = time.time()
 
@@ -49,14 +60,22 @@ def main(accelerator: Accelerator, args, config, logger):
             accelerator=accelerator,
             config=config,
             model=model,
-            criterion=criterion,
+            criterion=train_loss_fn,
             data_loader=data_loader_train,
             optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
             epoch=epoch,
         )
 
         if accelerator.is_main_process:
-            acc1 = validate(config=config, data_loader=data_loader_val, model=model)
+
+            eval_metrics = validate(
+                config=config,
+                model=model,
+                criterion=validate_loss_fn,
+                data_loader=data_loader_val,
+            )
+            acc1 = eval_metrics[config.EVAL_METRIC]
 
             if epoch % config.SAVE_FREQ == 0 and (acc1 > max_accuracy):
                 unwrapped_model = accelerator.unwrap_model(model)
@@ -71,9 +90,14 @@ def main(accelerator: Accelerator, args, config, logger):
             total_time = time.time() - start_time
             total_time_str = str(datetime.timedelta(seconds=int(total_time)))
             logger.info("Training time {}".format(total_time_str))
+        if lr_scheduler is not None:
+            # step LR for next epoch
+            lr_scheduler.step(epoch + 1)
 
 
-def train_one_epoch(accelerator, config, model, criterion, data_loader, optimizer, epoch):
+def train_one_epoch(
+    accelerator, config, model, criterion, data_loader, optimizer, lr_scheduler, epoch
+):
     model.train()
     optimizer.zero_grad()
     batch_time = AverageMeter()
@@ -115,15 +139,18 @@ def train_one_epoch(accelerator, config, model, criterion, data_loader, optimize
 
     if accelerator.is_main_process:
         epoch_time = time.time() - start
-        logger.info(f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
+        logger.info(
+            f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}"
+        )
 
 
 @torch.no_grad()
-def validate(config, model, data_loader):
+def validate(config, model, criterion, data_loader):
     model.eval()
 
     batch_time = AverageMeter()
     acc1_meter = AverageMeter()
+    loss_meter = AverageMeter()
 
     end = time.time()
     for idx, (inputs, labels) in enumerate(data_loader):
@@ -135,7 +162,9 @@ def validate(config, model, data_loader):
         functional.reset_net(model)
 
         [acc1] = accuracy(outputs, labels)
+        loss = criterion(outputs, labels)
         acc1_meter.update(acc1.item(), labels.size(0))
+        loss_meter.update(loss.item(), labels.size(0))
         # acc5_meter.update(acc5.item(), target.size(0))
         batch_time.update(time.time() - end)
         end = time.time()
@@ -146,10 +175,11 @@ def validate(config, model, data_loader):
                 f"Test: [{idx}/{len(data_loader)}]\t"
                 f"Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
                 f"Acc@1 {acc1_meter.val:.3f} ({acc1_meter.avg:.3f})\t"
+                f"Loss {loss_meter.val:.3f} ({loss_meter.avg:.3f})\t"
                 f"Mem {memory_used:.0f}MB"
             )
     logger.info(f" * Acc@1 {acc1_meter.avg:.3f}")
-    return acc1_meter.avg
+    return {"top1": acc1_meter.avg, "loss": loss_meter.avg}
 
 
 if __name__ == "__main__":
