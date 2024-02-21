@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     _C = CN()
     _C.DATA = CN()
-    _C.DATA.DATA_PATH = r"D:\Files\data\cifar\cifar10"
+    _C.DATA.DATA_PATH = r"/data1/hzh/cifar10"
     _C.DATA.IMG_SIZE = 32
     config = _C.clone()
     dataset_train, dataset_val, dataloader_train, dataloader_val = build_cifar_loader(
@@ -90,10 +90,10 @@ if __name__ == "__main__":
     )
 
     image = image.numpy()
-    plt.imshow(
-        np.transpose(image, (1, 2, 0))
-    )  # 如果数据格式为（C，H，W），需要转换为（H，W，C）
-    plt.axis("off")
-    plt.show()
+    # plt.imshow(
+    #     np.transpose(image, (1, 2, 0))
+    # )  # 如果数据格式为（C，H，W），需要转换为（H，W，C）
+    # plt.axis("off")
+    # plt.show()
 
     print("Label:", label)
