@@ -1,0 +1,1 @@
+accelerate launch main.py --cfg config/sdt_base_train_imagenet.yaml --dataset imagenet --data_path /data1/hzh/imagenet --batch_size 32 --output output 
