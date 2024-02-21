@@ -1,0 +1,15 @@
+PRINT_FREQ: 50
+
+MODEL:
+  NAME: sdt-base
+  MLP_RATIO: 4.0
+
+DATA:
+  DATASET: cifar10
+  IMG_SIZE: 32
+  CHANNELS: 3
+  VAL_BATCH_SIZE: 32
+
+TRAIN:
+  EPOCHS: 10
+

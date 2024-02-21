@@ -1,0 +1,5 @@
+{
+    "reportGeneralTypeIssues": false,
+    "reportUnboundVariable": "warning",
+    "reportAttributeAccessIssue": false
+}
