@@ -10,6 +10,13 @@ def parse_option():
 
     parser = argparse.ArgumentParser(description="SpikeDrivenTransformer Settings")
     parser.add_argument(
+        "--exp",
+        type=str,
+        required=True,
+        metavar="EXPERIMENTAL",
+        help="name of the experiment",
+    )
+    parser.add_argument(
         "--cfg", type=str, required=True, metavar="FILE", help="path to config file"
     )
     parser.add_argument("--eval", type=bool, help="evaluate mode")

@@ -38,6 +38,13 @@ def create_loss_fn(config):
 
     return train_loss_fn
 
-def wandb_init(config):
-    wandb.init(config=config,project=config.)
-    
+
+# def wandb_init(config):
+#     wandb.init(
+#         config=config,
+#         dir=config.OUTPUT,
+#         project=config.EXPERIMENT,
+#         entity="snn-training",
+#         job_type="training",
+#         reinit=True,
+#     )

@@ -26,6 +26,7 @@ def _add_BASE_NODE():
     # eval mode (cli, not required)
     _C.EVAL_MODE = False
     _C.EVAL_METRIC = "top1"  # best metric(top1,top5,loss)
+    _C.EXPERIMENT = ""
 
 
 def _add_DATA_NODE():
@@ -143,9 +144,11 @@ def _update_config_from_file(config, cfg_file):
 
 
 def _update_config(config, args):
-    _update_config_from_file(config, args.cfg)
 
     config.defrost()
+    _update_config_from_file(config, args.cfg)
+
+    config.EXPERIMENT = args.exp
 
     # output
     if args.tag:
