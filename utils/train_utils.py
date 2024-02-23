@@ -10,8 +10,9 @@ from timm.loss import (
     JsdCrossEntropy,
     BinaryCrossEntropy,
 )
-import wandb
+
 from yacs.config import CfgNode as CN
+from torch.utils.tensorboard.writer import SummaryWriter
 
 
 def init_seed(config):
@@ -39,12 +40,11 @@ def create_loss_fn(config):
     return train_loss_fn
 
 
-# def wandb_init(config):
-#     wandb.init(
-#         config=config,
-#         dir=config.OUTPUT,
-#         project=config.EXPERIMENT,
-#         entity="snn-training",
-#         job_type="training",
-#         reinit=True,
-#     )
+def writer_init(config):
+    writer = SummaryWriter(config.OUTPUT)
+    return writer
+
+
+def add_scaler(writer, value, epoch):
+    for k, v in value.items():
+        writer.add_scaler(k, v, epoch)

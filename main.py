@@ -16,10 +16,12 @@ from timm.utils import accuracy, AverageMeter
 from datasets import build_loader
 from model import build_model
 from config import parse_option
-from utils import set_logger, init_seed, create_loss_fn
+from utils import set_logger, init_seed, create_loss_fn, writer_init, add_scaler
+
+from torch.utils.tensorboard.writer import SummaryWriter
 
 
-def main(accelerator: Accelerator, args, config, logger):
+def main(accelerator: Accelerator, args, config, logger, writer):
     _, _, data_loader_train, data_loader_val = build_loader(config)
 
     logger.info(f"Creating model:{config.MODEL.NAME}")
@@ -56,7 +58,7 @@ def main(accelerator: Accelerator, args, config, logger):
 
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
         # 设置sampler epoch
-        train_one_epoch(
+        train_metrics = train_one_epoch(
             accelerator=accelerator,
             config=config,
             model=model,
@@ -69,13 +71,13 @@ def main(accelerator: Accelerator, args, config, logger):
 
         if accelerator.is_main_process:
 
-            eval_metrics = validate(
+            val_metrics = validate(
                 config=config,
                 model=model,
                 criterion=validate_loss_fn,
                 data_loader=data_loader_val,
             )
-            acc1 = eval_metrics[config.EVAL_METRIC]
+            acc1 = val_metrics[config.EVAL_METRIC]
 
             if epoch % config.SAVE_FREQ == 0 and (acc1 > max_accuracy):
                 unwrapped_model = accelerator.unwrap_model(model)
@@ -90,6 +92,9 @@ def main(accelerator: Accelerator, args, config, logger):
             total_time = time.time() - start_time
             total_time_str = str(datetime.timedelta(seconds=int(total_time)))
             logger.info("Training time {}".format(total_time_str))
+
+            metric = {**train_metrics, **val_metrics}
+            add_scaler(writer, metric, epoch)
         if lr_scheduler is not None:
             # step LR for next epoch
             lr_scheduler.step(epoch + 1)
@@ -142,6 +147,8 @@ def train_one_epoch(
         logger.info(
             f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}"
         )
+    train_metrics = {"train_loss": loss_meter.avg}
+    return train_metrics
 
 
 @torch.no_grad()
@@ -179,16 +186,19 @@ def validate(config, model, criterion, data_loader):
                 f"Mem {memory_used:.0f}MB"
             )
     logger.info(f" * Acc@1 {acc1_meter.avg:.3f}")
-    return {"top1": acc1_meter.avg, "loss": loss_meter.avg}
+    return {"top1": acc1_meter.avg, "val_loss": loss_meter.avg}
 
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     accelerator = Accelerator()
+
     device = accelerator.device
 
     args, config = parse_option()
     logger = set_logger(config=config)
+
+    writer = writer_init(config)
     init_seed(config)
 
-    main(accelerator, args, config, logger)
+    main(accelerator, args, config, logger, writer)
