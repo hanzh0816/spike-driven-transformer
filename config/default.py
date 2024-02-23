@@ -145,8 +145,9 @@ def _update_config_from_file(config, cfg_file):
 
 def _update_config(config, args):
 
-    config.defrost()
     _update_config_from_file(config, args.cfg)
+    
+    config.defrost()
 
     config.EXPERIMENT = args.exp
 
