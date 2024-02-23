@@ -1,0 +1,31 @@
+2024-02-23 11:36:28,900 INFO    MainThread:22460 [wandb_setup.py:_flush():76] Current SDK version is 0.16.3
+2024-02-23 11:36:28,900 INFO    MainThread:22460 [wandb_setup.py:_flush():76] Configure stats pid to 22460
+2024-02-23 11:36:28,900 INFO    MainThread:22460 [wandb_setup.py:_flush():76] Loading settings from C:\Users\lenovo2\.config\wandb\settings
+2024-02-23 11:36:28,900 INFO    MainThread:22460 [wandb_setup.py:_flush():76] Loading settings from D:\WorkSpace\python\spike-driven-transformer\wandb\settings
+2024-02-23 11:36:28,900 INFO    MainThread:22460 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2024-02-23 11:36:28,900 INFO    MainThread:22460 [wandb_setup.py:_flush():76] Applying setup settings: {'_disable_service': False}
+2024-02-23 11:36:28,912 INFO    MainThread:22460 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'test.py', 'program_abspath': 'D:\\WorkSpace\\python\\spike-driven-transformer\\test.py', 'program': 'D:\\WorkSpace\\python\\spike-driven-transformer\\test.py'}
+2024-02-23 11:36:28,912 INFO    MainThread:22460 [wandb_init.py:_log_setup():526] Logging user logs to D:\WorkSpace\python\spike-driven-transformer\wandb\run-20240223_113628-vqawk5qk\logs\debug.log
+2024-02-23 11:36:28,912 INFO    MainThread:22460 [wandb_init.py:_log_setup():527] Logging internal logs to D:\WorkSpace\python\spike-driven-transformer\wandb\run-20240223_113628-vqawk5qk\logs\debug-internal.log
+2024-02-23 11:36:28,912 INFO    MainThread:22460 [wandb_init.py:init():566] calling init triggers
+2024-02-23 11:36:28,912 INFO    MainThread:22460 [wandb_init.py:init():573] wandb.init called with sweep_config: {}
+config: {'BASE': [''], 'LOG_LEVEL': 20, 'TAG': 'default', 'SAVE_FREQ': 1, 'PRINT_FREQ': 10, 'OUTPUT': 'output\\sdt-base\\default', 'SEED': 0, 'EVAL_MODE': False, 'EVAL_METRIC': 'top1', 'DATA': CfgNode({'IMG_SIZE': 224, 'CHANNELS': 3, 'BATCH_SIZE': 4, 'VAL_BATCH_SIZE': 32, 'DATA_PATH': '/data1/hzh/imagenet', 'DATASET': 'imagenet'}), 'MODEL': CfgNode({'NAME': 'sdt-base', 'NUM_CLASSES': 1000, 'PATCH_SIZE': 16, 'NUM_HEADS': 8, 'EMBED_DIMS': 512, 'MLP_RATIO': 1.0, 'NUM_LAYERS': 4, 'POOL_STAT': '1111', 'SPIKE_MODE': 'lif', 'SPIKE_T': 4, 'BACKEND': 'torch', 'RESUME': False, 'RESUME_PATH': '', 'INIT_CHECKPOINT': False, 'CHECKPOINT_PATH': '', 'PRETRAINED': False, 'PRETRAINED_PATH': ''}), 'TRAIN': CfgNode({'TET': False, 'START_EPOCH': 0, 'EPOCHS': 200, 'BCE_LOSS': False, 'JSD_LOSS': False, 'LABEL_SMOOTH': 0.1}), 'OPTIMIZER': CfgNode({'OPT': 'sgd', 'EPS': None, 'BETAS': None, 'MOMENTUM': 0.9, 'WEIGHT_DECAY': 0.0001, 'CLIP_GRAD': None, 'CLIP_MODE': 'norm'}), 'LR_SCHEDULER': CfgNode({'SCHED': 'step', 'LR': 0.01, 'WARMUP_LR': 0.0001, 'DECAY_EPOCHS': 30, 'WARMUP_EPOCHS': 3, 'DECAY_RATE': 0.1})}
+2024-02-23 11:36:28,912 INFO    MainThread:22460 [wandb_init.py:init():616] starting backend
+2024-02-23 11:36:28,912 INFO    MainThread:22460 [wandb_init.py:init():620] setting up manager
+2024-02-23 11:36:28,917 INFO    MainThread:22460 [backend.py:_multiprocessing_setup():105] multiprocessing start_methods=spawn, using: spawn
+2024-02-23 11:36:28,919 INFO    MainThread:22460 [wandb_init.py:init():628] backend started and connected
+2024-02-23 11:36:28,927 INFO    MainThread:22460 [wandb_init.py:init():720] updated telemetry
+2024-02-23 11:36:28,982 INFO    MainThread:22460 [wandb_init.py:init():753] communicating run to backend with 90.0 second timeout
+2024-02-23 11:36:29,831 INFO    MainThread:22460 [wandb_run.py:_on_init():2262] communicating current version
+2024-02-23 11:36:30,181 INFO    MainThread:22460 [wandb_run.py:_on_init():2271] got version response 
+2024-02-23 11:36:30,181 INFO    MainThread:22460 [wandb_init.py:init():804] starting run threads in backend
+2024-02-23 11:36:42,451 WARNING MsgRouterThr:22460 [router.py:message_loop():77] message_loop has been closed
+2024-02-23 11:36:47,311 ERROR   MainThread:22460 [wandb_init.py:init():1194] transport failed
+Traceback (most recent call last):
+  File "D:\APP\Work\Anaconda\envs\pytorch\lib\site-packages\wandb\sdk\wandb_init.py", line 1176, in init
+    run = wi.init()
+  File "D:\APP\Work\Anaconda\envs\pytorch\lib\site-packages\wandb\sdk\wandb_init.py", line 817, in init
+    run_start_result = run_start_handle.wait(timeout=30)
+  File "D:\APP\Work\Anaconda\envs\pytorch\lib\site-packages\wandb\sdk\lib\mailbox.py", line 281, in wait
+    raise MailboxError("transport failed")
+wandb.sdk.lib.mailbox.MailboxError: transport failed

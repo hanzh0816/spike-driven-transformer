@@ -10,6 +10,8 @@ from timm.loss import (
     JsdCrossEntropy,
     BinaryCrossEntropy,
 )
+import wandb
+from yacs.config import CfgNode as CN
 
 
 def init_seed(config):
@@ -35,3 +37,7 @@ def create_loss_fn(config):
             train_loss_fn = nn.CrossEntropyLoss()
 
     return train_loss_fn
+
+def wandb_init(config):
+    wandb.init(config=config,project=config.)
+    

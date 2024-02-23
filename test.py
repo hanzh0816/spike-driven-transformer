@@ -15,46 +15,36 @@ from datasets import build_loader
 from model import build_model
 from config import parse_option
 from utils import set_logger, init_seed
+import random
+import wandb
 
 
-def test(args, config, logger):
-    _, _, data_loader_train, data_loader_val = build_loader(config)
+def test():
+    # simulate training
+    epochs = 10
+    offset = random.random() / 5
+    for epoch in range(2, epochs):
+        acc = 1 - 2**-epoch - random.random() / epoch - offset
+        loss = 2**-epoch + random.random() / epoch + offset
 
-    logger.info(f"Creating model:{config.MODEL.NAME}")
-    model = build_model(config)
-    model.to(device)
-    # use timm.optim to create specific optimizer
-    optimizer = create_optimizer(args=args, model=model)
+        # log metrics to wandb
+        wandb.log({"acc": acc, "loss": loss})
 
-    criterion = nn.CrossEntropyLoss()
-    model.train()
-    optimizer.zero_grad()
-
-    t = tqdm(data_loader_train)
-    t.set_description("Processing:")
-
-    for idx, (inputs, labels) in enumerate(t):
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-        outputs = model(inputs)
-
-        optimizer.zero_grad()
-        # for name, param in model.named_parameters():
-        #     if param.grad is None:
-        #         print(name)
-        # break
-        loss = criterion(outputs, labels.long())
-        loss.backward()
-        optimizer.step()
+    # [optional] finish the wandb run, necessary in notebooks
+    wandb.finish()
 
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
-    device = "cuda:4"
     args, config = parse_option()
-    logger = set_logger(config=config)
-    init_seed(config)
 
-    test(args, config, logger)
-
+    wandb.init(
+        project="my-awesome-project",
+        config=config,
+        entity="snn-training",
+        job_type="training",
+        reinit=True,
+    )
+    test()
+    # print(config.__dict__)
     # main(accelerator, args, config, logger)
