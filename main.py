@@ -16,7 +16,7 @@ from timm.utils import accuracy, AverageMeter
 from datasets import build_loader
 from model import build_model
 from config import parse_option
-from utils import set_logger, init_seed, create_loss_fn, writer_init, add_scaler
+from utils import set_logger, init_seed, create_loss_fn, writer_init, add_scalar
 
 from torch.utils.tensorboard.writer import SummaryWriter
 
@@ -95,7 +95,7 @@ def main(accelerator: Accelerator, args, config, logger, writer):
 
             metric = {**train_metrics, **val_metrics}
             metric["lr"] = optimizer.state_dict()["param_groups"][0]["lr"]
-            add_scaler(writer, metric, epoch)
+            add_scalar(writer, metric, epoch)
         if lr_scheduler is not None:
             # step LR for next epoch
             lr_scheduler.step(epoch + 1)

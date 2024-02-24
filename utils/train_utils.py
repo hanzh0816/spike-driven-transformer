@@ -1,5 +1,6 @@
 # build lr_scheduler
 
+from os import write
 import numpy as np
 import torch
 import random
@@ -45,6 +46,12 @@ def writer_init(config):
     return writer
 
 
-def add_scaler(writer, value, epoch):
+def add_scalar(writer, value, epoch):
     for k, v in value.items():
         writer.add_scaler(k, v, epoch)
+
+
+if __name__ == "__main__":
+
+    writer = SummaryWriter("./")
+    writer.add_scalar("loss", 1, 0)
