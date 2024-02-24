@@ -94,6 +94,7 @@ def main(accelerator: Accelerator, args, config, logger, writer):
             logger.info("Training time {}".format(total_time_str))
 
             metric = {**train_metrics, **val_metrics}
+            metric["lr"] = optimizer.state_dict()["param_groups"][0]["lr"]
             add_scaler(writer, metric, epoch)
         if lr_scheduler is not None:
             # step LR for next epoch
