@@ -13,7 +13,7 @@ from timm.loss import (
 )
 
 from yacs.config import CfgNode as CN
-from torch.utils.tensorboard.writer import SummaryWriter
+import wandb
 
 
 def init_seed(config):
@@ -41,17 +41,13 @@ def create_loss_fn(config):
     return train_loss_fn
 
 
-def writer_init(config):
-    writer = SummaryWriter(config.OUTPUT)
-    return writer
-
-
-def add_scalar(writer, value, epoch):
-    for k, v in value.items():
-        writer.add_scaler(k, v, epoch)
-
-
-if __name__ == "__main__":
-
-    writer = SummaryWriter("./")
-    writer.add_scalar("loss", 1, 0)
+def wandb_init(config):
+    wandb.init(
+        project="spike-driven transformer",
+        config=config,
+        entity="snn-training",
+        job_type="training",
+        reinit=True,
+        dir=config.OUTPUT,
+        tags=config.EXPERIMENT,
+    )

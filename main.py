@@ -16,12 +16,12 @@ from timm.utils import accuracy, AverageMeter
 from datasets import build_loader
 from model import build_model
 from config import parse_option
-from utils import set_logger, init_seed, create_loss_fn, writer_init, add_scalar
+from utils import set_logger, init_seed, create_loss_fn, wandb_init
 
-from torch.utils.tensorboard.writer import SummaryWriter
+import wandb
 
 
-def main(accelerator: Accelerator, args, config, logger, writer):
+def main(accelerator: Accelerator, args, config, logger):
     _, _, data_loader_train, data_loader_val = build_loader(config)
 
     logger.info(f"Creating model:{config.MODEL.NAME}")
@@ -95,11 +95,14 @@ def main(accelerator: Accelerator, args, config, logger, writer):
 
             metric = {**train_metrics, **val_metrics}
             metric["lr"] = optimizer.state_dict()["param_groups"][0]["lr"]
-            add_scalar(writer, metric, epoch)
+
+            # todo: 添加wandb.watch 监视模型参数
+            wandb.log(metric)
         if lr_scheduler is not None:
             # step LR for next epoch
             lr_scheduler.step(epoch + 1)
 
+    wandb.finish()
 
 def train_one_epoch(
     accelerator, config, model, criterion, data_loader, optimizer, lr_scheduler, epoch
@@ -198,8 +201,8 @@ if __name__ == "__main__":
 
     args, config = parse_option()
     logger = set_logger(config=config)
+    wandb_init(config)
 
-    writer = writer_init(config)
     init_seed(config)
 
-    main(accelerator, args, config, logger, writer)
+    main(accelerator, args, config, logger)
