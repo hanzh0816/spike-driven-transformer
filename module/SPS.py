@@ -1,5 +1,4 @@
 from copy import deepcopy
-import cupy
 import torch
 import torch.nn as nn
 from spikingjelly.clock_driven.neuron import (

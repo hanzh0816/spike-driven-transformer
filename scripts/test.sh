@@ -1,1 +1,1 @@
-python test.py --cfg config/temp-train.yaml --dataset imagenet --data_path /data1/hzh/imagenet --batch_size 4 --output output 
+python test.py --cfg config/sdt_base_train_cifar10.yaml --exp cifar10_base --dataset imagenet --data_path /data1/hzh/imagenet --batch_size 4 --output output 
