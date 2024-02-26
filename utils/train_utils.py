@@ -41,7 +41,7 @@ def create_loss_fn(config):
     return train_loss_fn
 
 
-def wandb_init(config):
+def wandb_init(config, device):
     wandb.init(
         project="spike-driven transformer",
         config=config,
@@ -50,4 +50,5 @@ def wandb_init(config):
         reinit=True,
         dir=config.OUTPUT,
         tags=config.EXPERIMENT,
+        name="process" + str(device),
     )

@@ -2,6 +2,7 @@ PRINT_FREQ: 50
 
 MODEL:
   NAME: sdt-base
+  NUM_CLASSES: 10
   MLP_RATIO: 4.0
 
 DATA:

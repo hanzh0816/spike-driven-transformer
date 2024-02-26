@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
     args, config = parse_option()
     logger = set_logger(config=config)
-    wandb_init(config)
+    wandb_init(config,device)
 
     init_seed(config)
 
