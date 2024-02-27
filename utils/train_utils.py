@@ -88,7 +88,7 @@ def wandb_init(config, device):
         reinit=True,
         dir=config.OUTPUT,
         tags=config.TAG,
-        name="process" + str(device),
+        name=config.TAG + "process" + str(device),
     )
 
 
