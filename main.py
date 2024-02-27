@@ -16,28 +16,35 @@ from timm.utils import accuracy, AverageMeter
 from datasets import build_loader
 from model import build_model
 from config import parse_option
-from utils import set_logger, init_seed, create_loss_fn, wandb_init
+import utils
 
 import wandb
 
 
-def main(accelerator: Accelerator, args, config, logger):
+def main(accelerator: Accelerator, config, logger):
     _, _, data_loader_train, data_loader_val = build_loader(config)
 
     logger.info(f"Creating model:{config.MODEL.NAME}")
     model = build_model(config)
 
     # use timm.optim to create specific optimizer
-    optimizer = create_optimizer(args=args, model=model)
+    optimizer = create_optimizer(args=utils.get_optimizer_args(config), model=model)
 
     # use timm.scheduler to create specific lr scheduler
-    lr_scheduler, num_epochs = create_scheduler(args, optimizer)
+    lr_scheduler, _ = create_scheduler(
+        args=utils.get_lr_scheduler_args(config), optimizer=optimizer
+    )
+
+    # resume checkpoint
+    if config.MODEL.RESUME:
+        utils.load_model(config, model, optimizer)
+
     start_epoch = config.TRAIN.START_EPOCH
     if lr_scheduler is not None and start_epoch > 0:
         lr_scheduler.step(start_epoch)
 
     # create criterion
-    train_loss_fn = create_loss_fn(config)
+    train_loss_fn = utils.create_loss_fn(config)
     train_loss_fn = train_loss_fn.cuda()
     validate_loss_fn = nn.CrossEntropyLoss().cuda()
 
@@ -45,11 +52,6 @@ def main(accelerator: Accelerator, args, config, logger):
     data_loader_train, model, optimizer, lr_scheduler = accelerator.prepare(
         data_loader_train, model, optimizer, lr_scheduler
     )
-
-    # resume checkpoint
-    if config.MODEL.RESUME:
-        # todo: 添加resume checkpoint
-        pass
 
     logger.info("Start training")
     start_time = time.time()
@@ -81,12 +83,13 @@ def main(accelerator: Accelerator, args, config, logger):
 
             if epoch % config.SAVE_FREQ == 0 and (acc1 > max_accuracy):
                 unwrapped_model = accelerator.unwrap_model(model)
-                # todo implement save checkpoints
-                # save_model(unwrapped_model, config)
+                utils.save_model(accelerator, config, epoch, unwrapped_model, optimizer)
+
+            max_accuracy = max(max_accuracy, acc1)
 
             print(f"Accuracy of the network on the valid images: {acc1:.1f}%")
+            print(f"Max accuracy: {max_accuracy:.2f}%")
             logger.info(f"Accuracy of the network on the valid images: {acc1:.1f}%")
-            max_accuracy = max(max_accuracy, acc1)
             logger.info(f"Max accuracy: {max_accuracy:.2f}%")
 
             total_time = time.time() - start_time
@@ -103,6 +106,7 @@ def main(accelerator: Accelerator, args, config, logger):
             lr_scheduler.step(epoch + 1)
 
     wandb.finish()
+
 
 def train_one_epoch(
     accelerator, config, model, criterion, data_loader, optimizer, lr_scheduler, epoch
@@ -200,9 +204,9 @@ if __name__ == "__main__":
     device = accelerator.device
 
     args, config = parse_option()
-    logger = set_logger(config=config)
-    wandb_init(config,device)
+    logger = utils.set_logger(config=config)
+    utils.wandb_init(config, device)
 
-    init_seed(config)
+    utils.init_seed(config)
 
-    main(accelerator, args, config, logger)
+    main(accelerator, config, logger)

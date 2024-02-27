@@ -26,7 +26,6 @@ def _add_BASE_NODE():
     # eval mode (cli, not required)
     _C.EVAL_MODE = False
     _C.EVAL_METRIC = "top1"  # best metric(top1,top5,loss)
-    _C.EXPERIMENT = ""
 
 
 def _add_DATA_NODE():
@@ -76,14 +75,6 @@ def _add_MODEL_NODE():
     _C.MODEL.RESUME = False
     _C.MODEL.RESUME_PATH = ""
 
-    # Initialize model from this checkpoint (cli argument, not required)
-    _C.MODEL.INIT_CHECKPOINT = False
-    _C.MODEL.CHECKPOINT_PATH = ""
-
-    # Using pretrained model  (config, not required)
-    _C.MODEL.PRETRAINED = False
-    _C.MODEL.PRETRAINED_PATH = ""
-
 
 def _add_TRAIN_NODE():
     """training settings"""
@@ -103,7 +94,7 @@ def _add_TRAIN_NODE():
 def _add_OPTIMIZER_NODE():
     """optimizer settings"""
     _C.OPTIMIZER = CN()
-    # (cli argument, not required)
+    # (config, not required)
 
     # opt method
     _C.OPTIMIZER.OPT = "sgd"
@@ -112,19 +103,20 @@ def _add_OPTIMIZER_NODE():
     _C.OPTIMIZER.BETAS = None
     _C.OPTIMIZER.MOMENTUM = 0.9
     _C.OPTIMIZER.WEIGHT_DECAY = 0.0001
-    _C.OPTIMIZER.CLIP_GRAD = None  # Clip gradient norm (default: None, no clipping)
-    _C.OPTIMIZER.CLIP_MODE = "norm"  # Gradient clipping mode.("norm", "value", "agc")
 
 
 def _add_LR_SCHEDULER_NODE():
     _C.LR_SCHEDULER = CN()
-    # (cli argument, not required)
+    # (config, not required)
     _C.LR_SCHEDULER.SCHED = "step"
     _C.LR_SCHEDULER.LR = 0.01
+    _C.LR_SCHEDULER.MIN_LR = 0
 
-    _C.LR_SCHEDULER.WARMUP_LR = 0.0001  # warmup learning rate (default: 0.0001)
+    _C.LR_SCHEDULER.WARMUP_LR = 1e-5  # warmup learning rate (default: 0.0001)
     _C.LR_SCHEDULER.DECAY_EPOCHS = 30  # epoch interval to decay LR
     _C.LR_SCHEDULER.WARMUP_EPOCHS = 3  # epochs to warmup LR, if scheduler supports
+    _C.LR_SCHEDULER.COOLDOWN_EPOCHS = 0
+
     _C.LR_SCHEDULER.DECAY_RATE = 0.1  # LR decay rate (default: 0.1)
 
 
@@ -146,10 +138,8 @@ def _update_config_from_file(config, cfg_file):
 def _update_config(config, args):
 
     _update_config_from_file(config, args.cfg)
-    
-    config.defrost()
 
-    config.EXPERIMENT = args.exp
+    config.defrost()
 
     # output
     if args.tag:
@@ -175,12 +165,6 @@ def _update_config(config, args):
         config.MODEL.RESUME = args.resume
         config.MODEL.RESUME_PATH = args.resume_path
 
-    # init checkpoint
-    if args.init_checkpoint:
-        assert args.checkpoint_path is not None, "checkpoint path must be specified"
-        config.MODEL.INIT_CHECKPOINT = args.init_checkpoint
-        config.MODEL.CHECKPOINT_PATH = args.checkpoint_path
-
     # model
     if args.eval:
         config.EVAL_MODE = args.eval
@@ -192,36 +176,6 @@ def _update_config(config, args):
         config.TRAIN.START_EPOCH = args.start_epoch
     if args.epochs:
         config.TRAIN.EPOCHS = args.epochs
-
-    # optimizer
-    if args.opt:
-        config.OPTIMIZER.OPT = args.opt
-    if args.opt_eps:
-        config.OPTIMIZER.EPS = args.opt_eps
-    if args.opt_betas:
-        config.OPTIMIZER.BETAS = args.opt_betas
-    if args.momentum:
-        config.OPTIMIZER.MOMENTUM = args.momentum
-    if args.weight_decay:
-        config.OPTIMIZER.WEIGHT_DECAY = args.weight_decay
-    if args.clip_grad:
-        config.OPTIMIZER.CLIP_GRAD = args.clip_grad
-    if args.clip_mode:
-        config.OPTIMIZER.CLIP_MODE = args.clip_mode
-
-    # lr scheduler
-    if args.sched:
-        config.LR_SCHEDULER.SCHED = args.sched
-    if args.lr:
-        config.LR_SCHEDULER.LR = args.lr
-    if args.warmup_lr:
-        config.LR_SCHEDULER.WARMUP_LR = args.warmup_lr
-    if args.decay_epochs:
-        config.LR_SCHEDULER.DECAY_EPOCHS = args.decay_epochs
-    if args.warmup_epochs:
-        config.LR_SCHEDULER.WARMUP_EPOCHS = args.warmup_epochs
-    if args.decay_rate:
-        config.LR_SCHEDULER.DECAY_RATE = args.decay_rate
 
     return config
 
