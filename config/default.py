@@ -110,7 +110,7 @@ def _add_LR_SCHEDULER_NODE():
     # (config, not required)
     _C.LR_SCHEDULER.SCHED = "step"
     _C.LR_SCHEDULER.LR = 0.01
-    _C.LR_SCHEDULER.MIN_LR = 0
+    _C.LR_SCHEDULER.MIN_LR = 0.0
 
     _C.LR_SCHEDULER.WARMUP_LR = 1e-5  # warmup learning rate (default: 0.0001)
     _C.LR_SCHEDULER.DECAY_EPOCHS = 30  # epoch interval to decay LR
