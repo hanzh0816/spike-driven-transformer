@@ -19,32 +19,9 @@ import random
 import wandb
 
 
-def test():
-    # simulate training
-    epochs = 10
-    offset = random.random() / 5
-    for epoch in range(2, epochs):
-        acc = 1 - 2**-epoch - random.random() / epoch - offset
-        loss = 2**-epoch + random.random() / epoch + offset
-
-        # log metrics to wandb
-        wandb.log({"acc": acc, "loss": loss})
-
-    # [optional] finish the wandb run, necessary in notebooks
-    wandb.finish()
-
-
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(__file__))
+    # os.chdir(os.path.dirname(__file__))
     args, config = parse_option()
-
-    wandb.init(
-        project="my-awesome-project",
-        config=config,
-        entity="snn-training",
-        job_type="training",
-        reinit=True,
-    )
-    test()
+    print(config)
     # print(config.__dict__)
     # main(accelerator, args, config, logger)
