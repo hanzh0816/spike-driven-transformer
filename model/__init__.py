@@ -26,7 +26,7 @@ def build_model(config):
         )
     elif config.MODEL.NAME.startswith("ResNet"):
         model = ResNet50(config.MODEL.NUM_CLASSES)
-    elif config.MODEL.NAME == "sdt-origin":
+    elif config.MODEL.NAME == "origin":
         model = sdt_origin(
             img_size_h=config.DATA.IMG_SIZE,
             img_size_w=config.DATA.IMG_SIZE,
