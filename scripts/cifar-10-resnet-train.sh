@@ -1,0 +1,1 @@
+accelerate launch main.py --tag resnet50 --cfg config/cifar10-resnet-train.yaml --dataset cifar10 --data_path /data1/hzh/cifar10 --batch_size 64 --output output 
