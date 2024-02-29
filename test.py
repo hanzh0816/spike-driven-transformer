@@ -1,6 +1,7 @@
 import os
 import time
 import datetime
+from numpy import int64
 from tqdm import tqdm
 import torch.nn.functional as F
 
@@ -18,10 +19,15 @@ from utils import set_logger, init_seed
 import random
 import wandb
 
+from timm.loss import (
+    LabelSmoothingCrossEntropy,
+    SoftTargetCrossEntropy,
+    JsdCrossEntropy,
+    BinaryCrossEntropy,
+)
 
 if __name__ == "__main__":
-    # os.chdir(os.path.dirname(__file__))
-    args, config = parse_option()
-    print(config)
-    # print(config.__dict__)
-    # main(accelerator, args, config, logger)
+    train_loss_fn = LabelSmoothingCrossEntropy(smoothing=0.1)
+    x = torch.ones(10).unsqueeze(0)
+    y = torch.zeros(10).unsqueeze(0)
+    print(f"Training loss:{train_loss_fn(x,y)}")

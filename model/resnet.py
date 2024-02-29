@@ -1,4 +1,4 @@
-import torch
+import torch.nn.functional as F
 import torch.nn as nn
 import torchvision.models as models
 from timm.models.layers import trunc_normal_
@@ -14,6 +14,8 @@ class ResNet50(nn.Module):
         self.resnet.fc = nn.Linear(num_features, num_classes)
 
     def forward(self, x):
+        x = self.resnet(x)
+        x = F.softmax(x)
         return self.resnet(x)
 
     def _init_weights(self, m):
@@ -24,5 +26,3 @@ class ResNet50(nn.Module):
         elif isinstance(m, nn.BatchNorm2d):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
-
-
