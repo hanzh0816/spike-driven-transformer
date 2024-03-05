@@ -43,7 +43,7 @@ def main(accelerator: Accelerator, config, logger):
         lr_scheduler.step(start_epoch)
 
     # create criterion
-    train_loss_fn = utils.create_loss_fn(config)
+    train_loss_fn = utils.get_loss_fn(config)
     train_loss_fn = train_loss_fn.cuda()
     validate_loss_fn = nn.CrossEntropyLoss().cuda()
 

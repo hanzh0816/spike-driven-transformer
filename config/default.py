@@ -27,6 +27,12 @@ def _add_BASE_NODE():
     _C.EVAL_MODE = False
     _C.EVAL_METRIC = "top1"  # best metric(top1,top5,loss)
 
+    # DDP config
+    _C.RANK = None
+    _C.GPU = None
+    _C.WORLD_SIZE = None
+    _C.DIS_BACKEND = None
+
 
 def _add_DATA_NODE():
     """data settings"""
@@ -80,6 +86,9 @@ def _add_TRAIN_NODE():
     """training settings"""
     _C.TRAIN = CN()
 
+    # accumulate grad iterations
+    _C.TRAIN.ACCUM_ITER = 1
+
     # Training method
     _C.TRAIN.TET = False
 
@@ -88,7 +97,7 @@ def _add_TRAIN_NODE():
     _C.TRAIN.EPOCHS = 200
     _C.TRAIN.BCE_LOSS = False
     _C.TRAIN.JSD_LOSS = False
-    _C.TRAIN.LABEL_SMOOTH = 0.1
+    _C.TRAIN.LABEL_SMOOTH = 0.0
 
 
 def _add_OPTIMIZER_NODE():

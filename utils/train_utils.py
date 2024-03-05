@@ -1,10 +1,13 @@
 # build lr_scheduler
 import os
 import numpy as np
-from sympy import Q
 import torch
 import random
 import torch.nn as nn
+from timm.optim import create_optimizer
+from timm.scheduler import create_scheduler
+
+import torch.distributed as dist
 from timm.loss import (
     LabelSmoothingCrossEntropy,
     SoftTargetCrossEntropy,
@@ -26,15 +29,15 @@ class DictToObject:
 
 
 def init_seed(config):
-    seed = config.SEED
+    seed = config.SEED + config.LOCAL_RANK
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
 
-def create_loss_fn(config):
-    if config.TRAIN.LABEL_SMOOTH != 0:
+def get_loss_fn(config):
+    if config.TRAIN.LABEL_SMOOTH != 0.0:
         if config.TRAIN.BCE_LOSS:
             train_loss_fn = BinaryCrossEntropy(smoothing=config.TRAIN.LABEL_SMOOTH)
         else:
@@ -48,6 +51,16 @@ def create_loss_fn(config):
             train_loss_fn = nn.CrossEntropyLoss()
 
     return train_loss_fn
+
+
+def get_optimizer(config, model):
+    optimizer = create_optimizer(args=get_optimizer_args(config), model=model)
+    return optimizer
+
+
+def get_mixup_fn(config):
+    # todo: create mixup fn
+    pass
 
 
 def get_optimizer_args(config):
@@ -78,6 +91,44 @@ def get_lr_scheduler_args(config):
     return cfg
 
 
+def init_distributed_mode(config: CN):
+    config.defrost()
+    if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
+        config.RANK = int(os.environ["RANK"])
+        config.WORLD_SIZE = int(os.environ["WORLD_SIZE"])
+        config.LOCAL_RANK = int(os.environ["LOCAL_RANK"])
+
+    else:
+        # print("NOT using distributed mode")
+        raise EnvironmentError("NOT using distributed mode")
+        # return
+
+    # 这里需要设定使用的GPU
+    torch.cuda.set_device(config.LOCAL_RANK)
+    # 这里是GPU之间的通信方式，有好几种的，nccl比较快也比较推荐使用。
+    config.DIS_BACKEND = "nccl"
+    config.DIS_URL = "env://"
+
+    assert (
+        config.RANK
+        and config.WORLD_SIZE
+        and config.DIS_BACKEND
+        and config.DIS_URL is not None
+    )
+
+    # 启动多GPU
+    dist.init_process_group(
+        backend=config.DIS_BACKEND,
+        init_method=config.DIS_URL,
+        world_size=config.WORLD_SIZE,
+        rank=config.RANK,
+    )
+    dist.barrier()
+
+    config.freeze()
+    return config
+
+
 def wandb_init(config, device):
 
     wandb.init(
@@ -87,29 +138,12 @@ def wandb_init(config, device):
         job_type="training",
         reinit=True,
         dir=config.OUTPUT,
-        tags=config.TAG,
-        name=config.TAG + "process" + str(device),
+        name=config.TAG + str(device),
     )
 
 
-def save_model(accelerator, config, epoch, model_without_ddp, optimizer):
-    epoch_name = str(epoch)
-    output = os.path.join(config.OUTPUT, ("checkpoint-%s.pth" % epoch_name))
-    to_save = {
-        "model": model_without_ddp.state_dict(),
-        "optimizer": optimizer.state_dict(),
-        "epoch": epoch,
-    }
-
-    if accelerator.is_main_process:
-        torch.save(to_save, output)
-        print(f"Saved checkpoint-{epoch_name}.pth")
-
-
-def load_model(config, model_without_ddp, optimizer):
-    checkpoint = torch.load(config.MODEL.RESUME, map_location="cpu")
-    model_without_ddp.load_state_dict(checkpoint["model"])
-    if "optimizer" in checkpoint and "epoch" in checkpoint:
-        optimizer.load_state_dict(checkpoint["optimizer"])
-        config.TRAIN.START_EPOCH = checkpoint["epoch"] + 1
-    print(f"Resume checkpoint {config.MODEL.RESUME}")
+def is_main_process():
+    if dist.get_rank() == 0:
+        return True
+    else:
+        return False

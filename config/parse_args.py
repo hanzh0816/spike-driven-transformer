@@ -72,6 +72,6 @@ def parse_option():
         help="number of epochs to train (default: 200)",
     )
 
-    args, unparsed = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
     config = get_config(args)
     return args, config

@@ -2,6 +2,7 @@ import os
 import logging
 import logging.handlers
 import functools
+from .train_utils import is_main_process
 
 # from logging.handlers import RotatingFileHandler
 
@@ -14,13 +15,11 @@ def set_logger(config):
     )
 
     # print config
-    path = os.path.join(config.OUTPUT, "config.json")
-    with open(path, "w") as f:
-        f.write(config.dump())
-    logger.info(f"Full config saved to {path}")
-
-    # print config in log_file
-    # logger.info(config.dump())
+    if is_main_process():
+        path = os.path.join(config.OUTPUT, "config.json")
+        with open(path, "w") as f:
+            f.write(config.dump())
+        logger.info(f"Full config saved to {path}")
 
     return logger
 
