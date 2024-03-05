@@ -21,6 +21,8 @@ def load_model(config, model_without_ddp, optimizer):
     checkpoint = torch.load(config.MODEL.RESUME, map_location="cpu")
     model_without_ddp.load_state_dict(checkpoint["model"])
     if "optimizer" in checkpoint and "epoch" in checkpoint:
+        config.defrost()
         optimizer.load_state_dict(checkpoint["optimizer"])
         config.TRAIN.START_EPOCH = checkpoint["epoch"] + 1
+        config.freeze()
     print(f"Resume checkpoint {config.MODEL.RESUME}")

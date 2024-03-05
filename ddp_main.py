@@ -23,6 +23,8 @@ from utils.train_utils import is_main_process
 
 
 def main(config, logger):
+
+    # todo: implement ddp loader
     _, _, data_loader_train, data_loader_val = build_loader(config)
 
     # todo: add mixup here
@@ -46,8 +48,24 @@ def main(config, logger):
         device_ids=[config.LOCAL_RANK],
         find_unused_parameters=False,
     )
+    model_without_ddp = model.module
 
-    
+    # create optimizer
+    optimizer = utils.get_optimizer(config, model_without_ddp)
+
+    # create lr scheduler
+    lr_scheduler, _ = utils.get_lr_scheduler(config, optimizer)
+
+    # resume checkpoint
+    if config.MODEL.RESUME:
+        utils.load_model(config, model, optimizer)
+
+    start_epoch = config.TRAIN.START_EPOCH
+    if lr_scheduler is not None and start_epoch > 0:
+        lr_scheduler.step(start_epoch)
+
+    train_loss_fn = utils.get_loss_fn(config)
+    validate_loss_fn = nn.CrossEntropyLoss()
 
 
 if __name__ == "__main__":

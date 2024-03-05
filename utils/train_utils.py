@@ -58,6 +58,13 @@ def get_optimizer(config, model):
     return optimizer
 
 
+def get_lr_scheduler(config, optimizer):
+    lr_scheduler, num_epochs = create_scheduler(
+        args=get_lr_scheduler_args(config), optimizer=optimizer
+    )
+    return lr_scheduler, num_epochs
+
+
 def get_mixup_fn(config):
     # todo: create mixup fn
     pass

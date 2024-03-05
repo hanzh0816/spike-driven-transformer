@@ -13,6 +13,9 @@ import torch.utils.data.dataloader
 
 
 def _build_transform(is_train, config):
+    CIFAR100_TRAIN_MEAN = (0.5070751592371323, 0.48654887331495095, 0.4409178433670343)
+    CIFAR100_TRAIN_STD = (0.2673342858792401, 0.2564384629170883, 0.27615047132568404)
+
     if is_train:
         transform = transforms.Compose(
             [
@@ -22,7 +25,7 @@ def _build_transform(is_train, config):
                 # 按0.5的概率水平翻转图片
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                transforms.Normalize(CIFAR100_TRAIN_MEAN, CIFAR100_TRAIN_STD),
             ]
         )
         return transform
@@ -31,15 +34,28 @@ def _build_transform(is_train, config):
         [
             transforms.ToTensor(),
             transforms.Resize(size=to_2tuple(config.DATA.IMG_SIZE)),
-            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+            transforms.Normalize(CIFAR100_TRAIN_MEAN, CIFAR100_TRAIN_STD),
         ]
     )
     return transform
 
 
+def _build_dataset(is_train, config):
+    transform = _build_transform(is_train, config)
+    prefix = "train" if is_train else "val"
+    root = os.path.join(config.DATA.DATA_PATH, prefix)
+    dataset = datasets.CIFAR10(
+        root=root, train=is_train, download=True, transform=transform
+    )
+    return dataset
+
+
 def build_cifar_loader(config):
     dataset_train = _build_dataset(is_train=True, config=config)
     dataset_val = _build_dataset(is_train=False, config=config)
+    
+    sampler_train = torch.utils.data.Sampler(dataset_train)
+    sampler_val 
 
     dataloader_train = torch.utils.data.dataloader.DataLoader(
         dataset=dataset_train,
@@ -56,14 +72,9 @@ def build_cifar_loader(config):
     return dataset_train, dataset_val, dataloader_train, dataloader_val
 
 
-def _build_dataset(is_train, config):
-    transform = _build_transform(is_train, config)
-    prefix = "train" if is_train else "val"
-    root = os.path.join(config.DATA.DATA_PATH, prefix)
-    dataset = datasets.CIFAR10(
-        root=root, train=is_train, download=True, transform=transform
-    )
-    return dataset
+def build_cifar_tiny_loader(config):
+    # todo: implement load tiny cifar dataset
+    pass
 
 
 if __name__ == "__main__":
