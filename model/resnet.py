@@ -14,8 +14,6 @@ class ResNet50(nn.Module):
         self.resnet.fc = nn.Linear(num_features, num_classes)
 
     def forward(self, x):
-        x = self.resnet(x)
-        x = F.softmax(x)
         return self.resnet(x)
 
     def _init_weights(self, m):

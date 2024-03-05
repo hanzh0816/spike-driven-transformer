@@ -12,10 +12,9 @@ import torch.nn as nn
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
 from timm.utils import accuracy, AverageMeter
-
-from datasets import build_loader
 from model import build_model
 from config import parse_option
+from datasets import build_loader
 import utils
 
 import wandb
