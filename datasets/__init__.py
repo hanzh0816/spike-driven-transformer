@@ -51,5 +51,3 @@ def build_loader(config):
     )
 
     return dataset_train, dataset_val, data_loader_train, data_loader_val
-
-
