@@ -1,3 +1,4 @@
+import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import torchvision.models as models
@@ -24,3 +25,10 @@ class ResNet50(nn.Module):
         elif isinstance(m, nn.BatchNorm2d):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
+
+
+if __name__ == "__main__":
+    x = torch.rand((1, 3, 32, 32))
+    model = ResNet50(10)
+    y = model(x)
+    print(y.shape)

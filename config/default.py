@@ -26,10 +26,11 @@ def _add_BASE_NODE():
     # eval mode (cli, not required)
     _C.EVAL_MODE = False
     _C.EVAL_METRIC = "top1"  # best metric(top1,top5,loss)
+    _C.DIST_EVAL = False
 
     # DDP config
-    _C.RANK = None
-    _C.GPU = None
+    _C.WORLD_RANK = None
+    _C.LOCAL_RANK = None
     _C.WORLD_SIZE = None
     _C.DIS_BACKEND = None
 

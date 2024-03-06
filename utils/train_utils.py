@@ -101,7 +101,7 @@ def get_lr_scheduler_args(config):
 def init_distributed_mode(config: CN):
     config.defrost()
     if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
-        config.RANK = int(os.environ["RANK"])
+        config.WORLD_ANK = int(os.environ["RANK"])
         config.WORLD_SIZE = int(os.environ["WORLD_SIZE"])
         config.LOCAL_RANK = int(os.environ["LOCAL_RANK"])
 
@@ -117,7 +117,7 @@ def init_distributed_mode(config: CN):
     config.DIS_URL = "env://"
 
     assert (
-        config.RANK
+        config.WORLD_ANK
         and config.WORLD_SIZE
         and config.DIS_BACKEND
         and config.DIS_URL is not None
@@ -128,7 +128,7 @@ def init_distributed_mode(config: CN):
         backend=config.DIS_BACKEND,
         init_method=config.DIS_URL,
         world_size=config.WORLD_SIZE,
-        rank=config.RANK,
+        rank=config.WORLD_ANK,
     )
     dist.barrier()
 
@@ -136,7 +136,7 @@ def init_distributed_mode(config: CN):
     return config
 
 
-def wandb_init(config, device):
+def wandb_init(config):
 
     wandb.init(
         project="spike-driven transformer",
@@ -145,7 +145,7 @@ def wandb_init(config, device):
         job_type="training",
         reinit=True,
         dir=config.OUTPUT,
-        name=config.TAG + str(device),
+        name=config.TAG,
     )
 
 

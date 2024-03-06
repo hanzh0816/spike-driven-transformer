@@ -40,7 +40,9 @@ def _build_transform(is_train, config):
     return transform
 
 
-def _build_dataset(is_train, config):
+def _build_cifar_dataset(is_train, config):
+    
+    # todo: implement load tiny cifar dataset
     transform = _build_transform(is_train, config)
     prefix = "train" if is_train else "val"
     root = os.path.join(config.DATA.DATA_PATH, prefix)
@@ -50,61 +52,4 @@ def _build_dataset(is_train, config):
     return dataset
 
 
-def build_cifar_loader(config):
-    dataset_train = _build_dataset(is_train=True, config=config)
-    dataset_val = _build_dataset(is_train=False, config=config)
-    
-    sampler_train = torch.utils.data.Sampler(dataset_train)
-    sampler_val 
 
-    dataloader_train = torch.utils.data.dataloader.DataLoader(
-        dataset=dataset_train,
-        shuffle=True,
-        drop_last=True,
-    )
-
-    dataloader_val = torch.utils.data.dataloader.DataLoader(
-        dataset=dataset_val,
-        shuffle=True,
-        drop_last=True,
-    )
-
-    return dataset_train, dataset_val, dataloader_train, dataloader_val
-
-
-def build_cifar_tiny_loader(config):
-    # todo: implement load tiny cifar dataset
-    pass
-
-
-if __name__ == "__main__":
-
-    from yacs.config import CfgNode as CN
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    _C = CN()
-    _C.DATA = CN()
-    _C.DATA.DATA_PATH = r"/data1/hzh/cifar10"
-    _C.DATA.IMG_SIZE = 32
-    config = _C.clone()
-    dataset_train, dataset_val, dataloader_train, dataloader_val = build_cifar_loader(
-        config=config
-    )
-
-    batch = next(iter(dataloader_train))
-    images, labels = batch
-    image = images[0]
-    label = labels[0]
-    print(
-        f"image type: {type(image)} , image size:{images.shape} , label type:{type(label)}"
-    )
-
-    image = image.numpy()
-    # plt.imshow(
-    #     np.transpose(image, (1, 2, 0))
-    # )  # 如果数据格式为（C，H，W），需要转换为（H，W，C）
-    # plt.axis("off")
-    # plt.show()
-
-    print("Label:", label)

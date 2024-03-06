@@ -24,7 +24,6 @@ from utils.train_utils import is_main_process
 
 def main(config, logger):
 
-    # todo: implement ddp loader
     _, _, data_loader_train, data_loader_val = build_loader(config)
 
     # todo: add mixup here
@@ -72,11 +71,12 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     args, config = parse_option()
     config = utils.init_distributed_mode(config)
-
-    logger = utils.set_logger(config=config)
-
     device = torch.device("cuda", config.LOCAL_RANK)
-
+    
+    # initiate setting
+    logger = utils.set_logger(config=config)
+    if utils.is_main_process():
+        utils.wandb_init(config)
     utils.init_seed(config)
 
     cudnn.benchmark = True
