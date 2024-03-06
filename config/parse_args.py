@@ -1,5 +1,4 @@
 import argparse
-import numpy as np
 from .default import get_config
 
 

@@ -124,7 +124,7 @@ def _add_LR_SCHEDULER_NODE():
     _C.LR_SCHEDULER.WARMUP_EPOCHS = 3  # epochs to warmup LR, if scheduler supports
     _C.LR_SCHEDULER.COOLDOWN_EPOCHS = 0
 
-    _C.LR_SCHEDULER.DECAY_RATE = 0.1  # LR decay rate (default: 0.1)
+        
 
 
 def _update_config_from_file(config, cfg_file):
