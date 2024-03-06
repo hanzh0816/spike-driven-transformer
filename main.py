@@ -112,7 +112,7 @@ def main(config, logger):
 
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(__file__))
+    # os.chdir(os.path.dirname(__file__))
     args, config = parse_option()
     config = utils.init_distributed_mode(config)
     device = torch.device("cuda", config.LOCAL_RANK)
