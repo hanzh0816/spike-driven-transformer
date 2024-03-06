@@ -1,6 +1,4 @@
 BASE: ["cifar10-base.yaml"]
-PRINT_FREQ: 50
-SEED: 42
 
 MODEL:
   NAME: ResNet50

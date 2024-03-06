@@ -1,4 +1,0 @@
-BASE: ["cifar10-base.yaml"]
-PRINT_FREQ: 50
-SEED: 42
-

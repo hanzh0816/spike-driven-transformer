@@ -1,8 +1,0 @@
-BASE: ["cifar10-base.yaml"]
-PRINT_FREQ: 50
-SEED: 42
-TAG: t8
-
-MODEL:
-  SPIKE_T: 8
-  

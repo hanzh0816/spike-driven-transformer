@@ -85,7 +85,7 @@ def evaluate(config, logger, model, criterion, data_loader, device):
         eval_meter.meters["acc1"].update(acc1.item(), n=batch_size)
         eval_meter.meters["acc5"].update(acc5.item(), n=batch_size)
 
-        if idx % config.PRINT_FREQ == 0:
+        if utils.is_main_process() and (idx % config.PRINT_FREQ == 0):
             logger.info(
                 f"Test: [{idx}/{len(data_loader)}]\t"
                 f"Acc@1 {eval_meter.acc1.value:.3f} ({eval_meter.acc1.avg:.3f})\t"

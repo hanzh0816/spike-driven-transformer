@@ -25,7 +25,7 @@ def _add_BASE_NODE():
     _C.SEED = 0
     # eval mode (cli, not required)
     _C.EVAL_MODE = False
-    _C.EVAL_METRIC = "top1"  # best metric(top1,top5,loss)
+    _C.EVAL_METRIC = "acc1"  # best metric(acc1,acc5,loss)
     _C.DIST_EVAL = False
 
     # DDP config

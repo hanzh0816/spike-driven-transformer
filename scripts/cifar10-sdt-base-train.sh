@@ -1,1 +1,0 @@
-accelerate launch main.py --tag cifar10_base --cfg config/cifar10-sdt-base-train.yaml --dataset cifar10 --data_path /data1/hzh/cifar10 --batch_size 64 --output output 
