@@ -4,6 +4,7 @@ import datetime
 from tqdm import tqdm
 
 import torch
+import torch.distributed as dist
 from spikingjelly.clock_driven import functional
 
 import utils
@@ -39,10 +40,9 @@ def train_one_epoch(
             optimizer.step()
             optimizer.zero_grad()
 
-        torch.cuda.synchronize()
         functional.reset_net(model)
 
-        loss_value = utils.all_reduce_mean(loss_value)
+        dist.barrier()
         train_meter.update(train_loss=loss_value)
         train_meter.update(batch_time=time.time() - start)
 
