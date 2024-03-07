@@ -152,7 +152,7 @@ def is_main_process():
 def init_distributed_mode(config: CN):
     config.defrost()
     if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
-        config.WORLD_ANK = int(os.environ["RANK"])
+        config.WORLD_RANK = int(os.environ["RANK"])
         config.WORLD_SIZE = int(os.environ["WORLD_SIZE"])
         config.LOCAL_RANK = int(os.environ["LOCAL_RANK"])
 

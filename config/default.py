@@ -22,7 +22,7 @@ def _add_BASE_NODE():
     _C.SEED = 0
     # eval mode (cli, not required)
     _C.EVAL_MODE = False
-    _C.EVAL_METRIC = "acc1"  # best metric(acc1,acc5,loss)
+    _C.EVAL_METRIC = "top1"  # best metric(top1,top5,loss)
     _C.DIST_EVAL = False
 
     # DDP config
@@ -109,7 +109,7 @@ def _add_OPTIMIZER_NODE():
     _C.OPTIMIZER.EPS = None
     _C.OPTIMIZER.BETAS = None
     _C.OPTIMIZER.MOMENTUM = 0.9
-    _C.OPTIMIZER.WEIGHT_DECAY = 0.0001
+    _C.OPTIMIZER.WEIGHT_DECAY = 1e-3
 
 
 def _add_LR_SCHEDULER_NODE():
@@ -118,13 +118,27 @@ def _add_LR_SCHEDULER_NODE():
     _C.LR_SCHEDULER.SCHED = "step"
     _C.LR_SCHEDULER.LR = 0.01
     _C.LR_SCHEDULER.MIN_LR = 0.0
+    _C.LR_SCHEDULER.CYCLE_EPOCHS = 300  # epoch per cycle
 
+    # cycle config
+    _C.LR_SCHEDULER.DECAY_RATE = 0.01  # decay cycle init-learning-rate
+    _C.LR_SCHEDULER.CYCLE_LIMIT = 1  # max cycle num
+    _C.LR_SCHEDULER.CYCLE_MULT = 1.0  # periodic update multiple
+
+    # warm-up config
     _C.LR_SCHEDULER.WARMUP_LR = 1e-5  # warmup learning rate (default: 0.0001)
-    _C.LR_SCHEDULER.DECAY_EPOCHS = 30  # epoch interval to decay LR
-    _C.LR_SCHEDULER.WARMUP_EPOCHS = 3  # epochs to warmup LR, if scheduler supports
-    _C.LR_SCHEDULER.COOLDOWN_EPOCHS = 0
+    _C.LR_SCHEDULER.WARMUP_EPOCHS = 20  # epochs to warmup LR, if scheduler supports
+    _C.LR_SCHEDULER.WARMUP_PREFIX = False  #  If set to True, then every new epoch number equals epoch = epoch - warmup_t.
 
-        
+    # noise config
+    _C.LR_SCHEDULER.NOISE_RANGE_T = None  # range to add noise(list tuple or int)
+    _C.LR_SCHEDULER.NOISE_PCT = 0.67  # The amount of noise to be added.
+    _C.LR_SCHEDULER.NOISE_STD = 1.0
+    _C.LR_SCHEDULER.NOISE_SEED = 42
+
+    # other config
+    _C.LR_SCHEDULER.DECAY_EPOCHS = 30  # （StepLR only） epoch interval to decay LR
+    _C.LR_SCHEDULER.COOLDOWN_EPOCHS = 0  # (plateau only)
 
 
 def _update_config_from_file(config, cfg_file):
