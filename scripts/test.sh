@@ -1,1 +1,1 @@
-python test.py --cfg config/sdt_base_train_cifar10.yaml --exp cifar10_base --dataset imagenet --data_path /data1/hzh/imagenet --batch_size 4 --output output 
+CUDA_VISIBLE_DEVICES=2,3, python -m torch.distributed.launch --nproc_per_node=2 test.py --tag resnet50 --cfg config/cifar10-resnet-train.yaml --dataset cifar10 --data_path /data1/hzh/cifar10 --batch_size 256 --output output

@@ -19,6 +19,7 @@ from utils import set_logger, init_seed
 import random
 import wandb
 import model
+import utils
 
 from timm.loss import (
     LabelSmoothingCrossEntropy,
@@ -28,29 +29,45 @@ from timm.loss import (
 )
 
 if __name__ == "__main__":
-
-    from yacs.config import CfgNode as CN
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    _C = CN()
-    _C.DATA = CN()
-    _C.DATA.DATA_PATH = r"/data1/hzh/cifar10"
-    _C.DATA.IMG_SIZE = 32
-    _C.MODEL = CN()
-    _C.MODEL.NUM_CLASSES = 10
-    _C.MODEL.NAME = "ResNet"
-    config = _C.clone()
-
-    model = model.build_model(config)
-    print(model)
-    y = model(torch.randn(1, 3, 32, 32))
-    print(y.size())
+    # os.chdir(os.path.dirname(__file__))
+    args, config = parse_option()
+    config = utils.init_distributed_mode(config)
+    device = torch.device("cuda", config.LOCAL_RANK)
     
-    # train_loss_fn = LabelSmoothingCrossEntropy(smoothing=0.1)
-    # x = torch.ones((1, 10))
+    print(os.environ)
+    print("|| MASTER_ADDR:",os.environ["MASTER_ADDR"],
+        "|| MASTER_PORT:",os.environ["MASTER_PORT"],
+        "|| LOCAL_RANK:",os.environ["LOCAL_RANK"],
+        "|| RANK:",os.environ["RANK"], 
+        "|| WORLD_SIZE:",os.environ["WORLD_SIZE"])
+    print()
+    
+    print(f"world_size : {config.WORLD_SIZE} , local_rank : {config.LOCAL_RANK}")
 
-    # label = [3]
-    # label = torch.tensor(label, dtype=torch.int64)
-    # print(x.shape)
-    # print(f"Training loss:{train_loss_fn(x,label)}")
+# if __name__ == "__main__":
+
+# from yacs.config import CfgNode as CN
+# import matplotlib.pyplot as plt
+# import numpy as np
+
+# _C = CN()
+# _C.DATA = CN()
+# _C.DATA.DATA_PATH = r"/data1/hzh/cifar10"
+# _C.DATA.IMG_SIZE = 32
+# _C.MODEL = CN()
+# _C.MODEL.NUM_CLASSES = 10
+# _C.MODEL.NAME = "ResNet"
+# config = _C.clone()
+
+# model = model.build_model(config)
+# print(model)
+# y = model(torch.randn(1, 3, 32, 32))
+# print(y.size())
+
+# train_loss_fn = LabelSmoothingCrossEntropy(smoothing=0.1)
+# x = torch.ones((1, 10))
+
+# label = [3]
+# label = torch.tensor(label, dtype=torch.int64)
+# print(x.shape)
+# print(f"Training loss:{train_loss_fn(x,label)}")
