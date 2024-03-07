@@ -168,7 +168,7 @@ def init_distributed_mode(config: CN):
     config.DIS_URL = "env://"
 
     assert (
-        config.WORLD_ANK and config.WORLD_SIZE and config.DIS_BACKEND and config.DIS_URL
+        config.WORLD_RANK and config.WORLD_SIZE and config.DIS_BACKEND and config.DIS_URL
     ) is not None
 
     # 启动多GPU
@@ -176,7 +176,7 @@ def init_distributed_mode(config: CN):
         backend=config.DIS_BACKEND,
         init_method=config.DIS_URL,
         world_size=config.WORLD_SIZE,
-        rank=config.WORLD_ANK,
+        rank=config.WORLD_RANK,
     )
     dist.barrier()
 
