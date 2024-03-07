@@ -277,12 +277,16 @@ def get_lr_scheduler_args(config):
     sched_dict = {
         "eval_metric": config.EVAL_METRIC,
         "sched": config.LR_SCHEDULER.SCHED,
-        "epochs": config.TRAIN.EPOCHS,
+        "epochs": config.LR_SCHEDULER.CYCLE_EPOCHS,
         "decay_epochs": config.LR_SCHEDULER.DECAY_EPOCHS,
         "warmup_epochs": config.LR_SCHEDULER.WARMUP_EPOCHS,
         "cooldown_epochs": config.LR_SCHEDULER.COOLDOWN_EPOCHS,
-        "warmup_lr": config.LR_SCHEDULER.WARMUP_LR,
+        "decay_rate": config.LR_SCHEDULER.DECAY_RATE,
         "min_lr": config.LR_SCHEDULER.MIN_LR,
+        "warmup_lr": config.LR_SCHEDULER.WARMUP_LR,
+        "warmup_prefix": config.LR_SCHEDULER.WARMUP_PREFIX,
+        "lr_cycle_mul": config.LR_SCHEDULER.CYCLE_MULT,
+        "lr_cycle_limit": config.LR_SCHEDULER.CYCLE_LIMIT,
     }
     cfg = DictToObject(sched_dict)
     return cfg
