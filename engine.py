@@ -22,7 +22,7 @@ def train_one_epoch(
     start = time.time()
 
     t = tqdm(data_loader, disable=not utils.is_main_process())
-    t.set_description("Processing:")
+    t.set_description(f"epoch [{epoch}/{config.TRAIN.EPOCHS}]:")
 
     for idx, (inputs, labels) in enumerate(t):
 
@@ -35,6 +35,7 @@ def train_one_epoch(
         loss_value = loss.item()
         loss = loss / accum_iter
         loss.backward()
+        print(loss_value)
 
         if (idx + 1) % accum_iter == 0:
             optimizer.step()
