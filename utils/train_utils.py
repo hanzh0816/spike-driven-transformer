@@ -129,6 +129,7 @@ class MetricMeter(object):
     def synchronize_between_processes(self):
         for meter in self.meters.values():
             meter.synchronize_between_processes()
+            
 
     def add_meter(self, name, meter):
         self.meters[name] = meter
@@ -160,7 +161,6 @@ def init_distributed_mode(config: CN):
         # print("NOT using distributed mode")
         raise EnvironmentError("NOT using distributed mode")
         # return
-
     # 这里需要设定使用的GPU
     torch.cuda.set_device(config.LOCAL_RANK)
     # 这里是GPU之间的通信方式，有好几种的，nccl比较快也比较推荐使用。
@@ -286,6 +286,7 @@ def get_lr_scheduler_args(config):
         "warmup_lr": config.LR_SCHEDULER.WARMUP_LR,
         "warmup_prefix": config.LR_SCHEDULER.WARMUP_PREFIX,
         "lr_cycle_mul": config.LR_SCHEDULER.CYCLE_MULT,
+        "lr_cycle_decay": config.LR_SCHEDULER.CYCLE_DECAY,
         "lr_cycle_limit": config.LR_SCHEDULER.CYCLE_LIMIT,
     }
     cfg = DictToObject(sched_dict)

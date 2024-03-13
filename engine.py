@@ -35,7 +35,6 @@ def train_one_epoch(
         loss_value = loss.item()
         loss = loss / accum_iter
         loss.backward()
-        print(loss_value)
 
         if (idx + 1) % accum_iter == 0:
             optimizer.step()
@@ -48,9 +47,11 @@ def train_one_epoch(
         train_meter.update(batch_time=time.time() - start)
 
         start = time.time()
+        train_meter.synchronize_between_processes()
+        
         if utils.is_main_process() and (idx % config.PRINT_FREQ == 0):
             memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
-            train_meter.synchronize_between_processes()
+
             logger.info(
                 f"Train: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{num_steps}]\t"
                 # f"time {train_meter.batch_time.value:.4f} ({train_meter.batch_time.avg:.4f})\t"

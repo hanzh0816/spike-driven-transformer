@@ -28,12 +28,15 @@ from timm.loss import (
     BinaryCrossEntropy,
 )
 
-if __name__ == "__main__":
-    # os.chdir(os.path.dirname(__file__))
-    args, config = parse_option()
-    config = utils.init_distributed_mode(config)
-    device = torch.device("cuda", config.LOCAL_RANK)
-    
+from matplotlib import pyplot as plt
+
+def get_lr_per_epoch(scheduler, num_epoch):
+    lr_per_epoch = []
+    for epoch in range(num_epoch):
+        lr_per_epoch.append(scheduler._get_lr(epoch))
+    return lr_per_epoch
+
+def print_dist(config):
     print(os.environ)
     print("|| MASTER_ADDR:",os.environ["MASTER_ADDR"],
         "|| MASTER_PORT:",os.environ["MASTER_PORT"],
@@ -43,6 +46,40 @@ if __name__ == "__main__":
     print()
     
     print(f"world_size : {config.WORLD_SIZE} , local_rank : {config.LOCAL_RANK}")
+
+if __name__ == "__main__":
+    # os.chdir(os.path.dirname(__file__))
+    args, config = parse_option()
+    config = utils.init_distributed_mode(config)
+    device = torch.device("cuda", config.LOCAL_RANK)
+    
+    utils.init_seed(config)
+    _, _, data_loader_train, data_loader_val = build_loader(config)
+
+    model = build_model(config)
+    model.to(device)
+
+    # correct actual lr
+    config = utils.actual_lr(config)
+
+    model = torch.nn.parallel.DistributedDataParallel(
+        model,
+        device_ids=[config.LOCAL_RANK],
+        find_unused_parameters=False,
+    )
+    model_without_ddp = model.module
+    # create optimizer
+    optimizer = utils.get_optimizer(config, model)
+
+    # create lr scheduler
+    lr_scheduler, _ = utils.get_lr_scheduler(config, optimizer)
+
+    num_epoch = 200
+    lr_per_epoch = get_lr_per_epoch(lr_scheduler, num_epoch)
+    plt.plot([i for i in range(num_epoch)], lr_per_epoch)
+    plt.show()
+
+
 
 # if __name__ == "__main__":
 

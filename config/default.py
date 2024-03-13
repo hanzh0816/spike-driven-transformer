@@ -121,8 +121,8 @@ def _add_LR_SCHEDULER_NODE():
     _C.LR_SCHEDULER.CYCLE_EPOCHS = 300  # epoch per cycle
 
     # cycle config
-    _C.LR_SCHEDULER.DECAY_RATE = 0.01  # decay cycle init-learning-rate
     _C.LR_SCHEDULER.CYCLE_LIMIT = 1  # max cycle num
+    _C.LR_SCHEDULER.CYCLE_DECAY = 1.0 # cycle decay
     _C.LR_SCHEDULER.CYCLE_MULT = 1.0  # periodic update multiple
 
     # warm-up config
@@ -137,6 +137,7 @@ def _add_LR_SCHEDULER_NODE():
     _C.LR_SCHEDULER.NOISE_SEED = 42
 
     # other config
+    _C.LR_SCHEDULER.DECAY_RATE = 0.01  # (plateau only) decay cycle init-learning-rate
     _C.LR_SCHEDULER.DECAY_EPOCHS = 30  # （StepLR only） epoch interval to decay LR
     _C.LR_SCHEDULER.COOLDOWN_EPOCHS = 0  # (plateau only)
 
