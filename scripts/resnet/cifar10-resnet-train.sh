@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0,1,2,3, python -m torch.distributed.launch --nproc_per_node=4 main.py --tag resnet50-sgd-lr --cfg config/resnet/cifar10-resnet-train-sgd.yaml --dataset cifar10 --data_path /data1/hzh/cifar10 --batch_size 256 --output output

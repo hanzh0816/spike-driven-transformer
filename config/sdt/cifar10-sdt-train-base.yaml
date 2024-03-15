@@ -1,4 +1,4 @@
 BASE: ["cifar10-base.yaml"]
 
 MODEL:
-  NAME: ResNet50
+  NAME: sdt-base

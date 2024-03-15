@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0,1,2,3, python -m torch.distributed.launch --nproc_per_node=4 --master_addr 127.0.0.2 --master_port 29501 main.py --tag sdt-base --cfg config/sdt/cifar10-sdt-train-base.yaml --dataset cifar10 --data_path /data1/hzh/cifar10 --batch_size 256 --output output

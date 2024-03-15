@@ -1,0 +1,12 @@
+BASE: ["cifar10-base.yaml"]
+
+MODEL:
+  NAME: ResNet50
+
+OPTIMIZER:
+  OPT: sgd
+
+LR_SCHEDULER:
+  MIN_LR: 1e-4
+  CYCLE_DECAY: 0.6
+  
