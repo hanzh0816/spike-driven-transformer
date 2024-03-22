@@ -46,7 +46,7 @@ def build_loader(config):
     data_loader_val = torch.utils.data.DataLoader(
         dataset=dataset_val,
         sampler=sampler_val,
-        batch_size=config.DATA.BATCH_SIZE,
+        batch_size=config.DATA.VAL_BATCH_SIZE,
         drop_last=False,
     )
 

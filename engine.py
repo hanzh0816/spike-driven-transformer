@@ -12,7 +12,16 @@ from utils.train_utils import is_main_process
 
 
 def train_one_epoch(
-    config, logger, model, accum_iter, criterion, data_loader, optimizer, epoch, device
+    config,
+    logger,
+    model,
+    accum_iter,
+    criterion,
+    mixup_fn,
+    data_loader,
+    optimizer,
+    epoch,
+    device,
 ):
     model.train()
     optimizer.zero_grad()
@@ -28,6 +37,9 @@ def train_one_epoch(
 
         inputs = inputs.to(device)
         labels = labels.to(device)
+        if mixup_fn is not None:
+            inputs, labels = mixup_fn(inputs, labels)
+        
         batch_size = inputs.shape[0]
         outputs = model(inputs)
 
@@ -48,7 +60,7 @@ def train_one_epoch(
 
         start = time.time()
         train_meter.synchronize_between_processes()
-        
+
         if utils.is_main_process() and (idx % config.PRINT_FREQ == 0):
             memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
 

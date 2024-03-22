@@ -7,6 +7,7 @@ import random
 import torch.nn as nn
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
+from timm.data.mixup import Mixup
 
 import torch.distributed as dist
 from timm.loss import (
@@ -129,7 +130,6 @@ class MetricMeter(object):
     def synchronize_between_processes(self):
         for meter in self.meters.values():
             meter.synchronize_between_processes()
-            
 
     def add_meter(self, name, meter):
         self.meters[name] = meter
@@ -168,7 +168,10 @@ def init_distributed_mode(config: CN):
     config.DIS_URL = "env://"
 
     assert (
-        config.WORLD_RANK and config.WORLD_SIZE and config.DIS_BACKEND and config.DIS_URL
+        config.WORLD_RANK
+        and config.WORLD_SIZE
+        and config.DIS_BACKEND
+        and config.DIS_URL
     ) is not None
 
     # 启动多GPU
@@ -218,6 +221,7 @@ def actual_lr(config: CN):
         print("actual lr: %.2e" % actual_lr)
         print("accumulate grad iterations: %d" % config.TRAIN.ACCUM_ITER)
         print("effective batch size: %d" % eff_batch_size)
+        print("val batch size: %d" % config.DATA.VAL_BATCH_SIZE)
     config.LR_SCHEDULER.LR = actual_lr
     config.LR_SCHEDULER.MIN_LR = config.LR_SCHEDULER.MIN_LR * ratio
     config.LR_SCHEDULER.WARMUP_LR = config.LR_SCHEDULER.WARMUP_LR * ratio
@@ -226,21 +230,17 @@ def actual_lr(config: CN):
     return config
 
 
-def get_loss_fn(config):
-    if config.TRAIN.LABEL_SMOOTH != 0.0:
-        if config.TRAIN.BCE_LOSS:
-            train_loss_fn = BinaryCrossEntropy(smoothing=config.TRAIN.LABEL_SMOOTH)
-        else:
-            train_loss_fn = LabelSmoothingCrossEntropy(
-                smoothing=config.TRAIN.LABEL_SMOOTH
-            )
-    else:
-        if config.TRAIN.BCE_LOSS:
-            train_loss_fn = BinaryCrossEntropy()
-        else:
-            train_loss_fn = nn.CrossEntropyLoss()
+def get_loss_fn(config, mixup_fn=None):
 
-    return train_loss_fn
+    if mixup_fn is not None:
+        # smoothing is handled with mixup label transform
+        criterion = SoftTargetCrossEntropy()
+    elif config.TRAIN.LABEL_SMOOTH > 0.0:
+        criterion = LabelSmoothingCrossEntropy(smoothing=config.TRAIN.LABEL_SMOOTH)
+    else:
+        criterion = torch.nn.CrossEntropyLoss()
+
+    return criterion
 
 
 def get_optimizer(config, model):
@@ -256,8 +256,25 @@ def get_lr_scheduler(config, optimizer):
 
 
 def get_mixup_fn(config):
-    # todo: create mixup fn
-    pass
+    mixup_fn = None
+    mixup_active = (
+        config.DATA.MIXUP > 0
+        or config.DATA.CUTMIX > 0.0
+        or config.DATA.CUTMIX_MINMAX is not None
+    )
+    if mixup_active:
+        print("Mixup is activated!")
+        mixup_fn = Mixup(
+            mixup_alpha=config.DATA.MIXUP,
+            cutmix_alpha=config.DATA.CUTMIX,
+            cutmix_minmax=config.DATA.CUTMIX_MINMAX,
+            prob=config.DATA.MIXUP_PROB,
+            switch_prob=config.DATA.MIXUP_SWITCH_PROB,
+            mode=config.DATA.MIXUP_MODE,
+            label_smoothing=config.TRAIN.LABEL_SMOOTH,
+            num_classes=config.MODEL.NUM_CLASSES,
+        )
+    return mixup_fn
 
 
 def get_optimizer_args(config):

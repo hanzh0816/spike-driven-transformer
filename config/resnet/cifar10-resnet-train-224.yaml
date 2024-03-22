@@ -1,5 +1,8 @@
 BASE: ["cifar10-base.yaml"]
 
+DATA:
+  IMG_SIZE: 224
+
 MODEL:
   NAME: ResNet50
 

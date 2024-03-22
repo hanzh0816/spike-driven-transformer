@@ -49,7 +49,29 @@ def _add_DATA_NODE():
     # (config, required)
     _C.DATA.DATASET = ""
 
-    # todo: data augmentation settings
+    # data augmentation settings
+    _C.DATA.COLOR_JITTER = None
+    _C.DATA.AUTO_AUG = "rand-m9-mstd0.5-inc1"
+
+    # random erase settings
+    _C.DATA.RE_PROB = 0.25  # random erase prob
+    _C.DATA.RE_MODE = "pixel"  #  random erase mode
+    _C.DATA.RE_COUNT = 1  # random erase count
+    _C.DATA.RE_SPLIT = False  # Do not random erase first (clean) augmentation split
+
+    # mixup settings
+    _C.DATA.MIXUP = 0.0  # mixup alpha, mixup enabled if > 0.
+    _C.DATA.CUTMIX = 0.0  # cutmix alpha, cutmix enabled if > 0.
+    _C.DATA.CUTMIX_MINMAX = None  # cutmix min/max ratio, overrides alpha and enables cutmix if set (default: None)
+    _C.DATA.MIXUP_PROB = (
+        1.0  # Probability of performing mixup or cutmix when either/both is enabled
+    )
+    _C.DATA.MIXUP_SWITCH_PROB = (
+        0.5  # Probability of switching to cutmix when both mixup and cutmix enabled
+    )
+    _C.DATA.MIXUP_MODE = (
+        "batch"  # How to apply mixup/cutmix params. Per "batch", "pair", or "elem"
+    )
 
 
 def _add_MODEL_NODE():
@@ -68,7 +90,7 @@ def _add_MODEL_NODE():
     # mlp block hidden_dims ratio
     _C.MODEL.MLP_RATIO = 1.0
     _C.MODEL.NUM_LAYERS = 4
-    _C.MODEL.POOL_STAT = "1111"
+    _C.MODEL.POOL_STAT = "_1111"
 
     # LIF settings (config , required)
     _C.MODEL.SPIKE_MODE = "lif"
@@ -122,7 +144,7 @@ def _add_LR_SCHEDULER_NODE():
 
     # cycle config
     _C.LR_SCHEDULER.CYCLE_LIMIT = 1  # max cycle num
-    _C.LR_SCHEDULER.CYCLE_DECAY = 1.0 # cycle decay
+    _C.LR_SCHEDULER.CYCLE_DECAY = 1.0  # cycle decay
     _C.LR_SCHEDULER.CYCLE_MULT = 1.0  # periodic update multiple
 
     # warm-up config
@@ -142,10 +164,10 @@ def _add_LR_SCHEDULER_NODE():
     _C.LR_SCHEDULER.COOLDOWN_EPOCHS = 0  # (plateau only)
 
 
-def _update_config_from_file(config, cfg_file):
+def _update_config_from_file(config: CN, cfg_file):
     config.defrost()
     with open(cfg_file, "r") as f:
-        yaml_cfg = yaml.load(f, Loader=yaml.FullLoader)
+        yaml_cfg = yaml.load(f, Loader=yaml.SafeLoader)
 
     for cfg in yaml_cfg.setdefault("BASE", [""]):
         if cfg:

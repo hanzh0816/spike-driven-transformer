@@ -1,4 +1,12 @@
-BASE: ["cifar10-base.yaml"]
+BASE: ["cifar10-sdt-base.yaml"]
 
 MODEL:
   NAME: sdt-base
+  NUM_CLASSES: 10
+  PATCH_SIZE: 16
+  NUM_HEADS: 8
+  EMBED_DIMS: 256
+  MLP_RATIO: 4.0
+  NUM_LAYERS: 4
+  POOL_STAT: "_1111"
+  SPIKE_T: 4

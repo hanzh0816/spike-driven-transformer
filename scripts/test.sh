@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=2,3, python -m torch.distributed.launch --nproc_per_node=2 test.py --tag resnet50 --cfg config/cifar10-resnet-train-base.yaml --dataset cifar10 --data_path /data1/hzh/cifar10 --batch_size 256 --output output
+CUDA_VISIBLE_DEVICES=4,5,6,7, python -m torch.distributed.launch --nproc_per_node=4 --master_addr 127.0.0.2 --master_port 29501 test.py --tag sdt-base-1 --cfg config/sdt/cifar10-sdt-train-base.yaml --dataset cifar10 --data_path /data1/hzh/cifar10 --batch_size 256 --output output --epochs 300

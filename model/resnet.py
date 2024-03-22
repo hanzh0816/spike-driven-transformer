@@ -10,7 +10,7 @@ class ResNet50(nn.Module):
     def __init__(self, num_classes):
         super(ResNet50, self).__init__()
         self.resnet = models.resnet50()
-        self.resnet.maxpool = nn.Identity()  # type: ignore
+        # self.resnet.maxpool = nn.Identity()  # type: ignore
         num_features = self.resnet.fc.in_features
         self.resnet.fc = nn.Linear(num_features, num_classes)
 

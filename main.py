@@ -16,7 +16,7 @@ def main(config, logger):
 
     _, _, data_loader_train, data_loader_val = build_loader(config)
 
-    # todo: add mixup here
+    mixup_fn = utils.get_mixup_fn(config)
 
     logger.info(f"Creating model:{config.MODEL.NAME}")
     model = build_model(config)
@@ -45,7 +45,7 @@ def main(config, logger):
     if lr_scheduler is not None and start_epoch > 0:
         lr_scheduler.step(start_epoch)
 
-    train_loss_fn = utils.get_loss_fn(config)
+    train_loss_fn = utils.get_loss_fn(config, mixup_fn)
     validate_loss_fn = nn.CrossEntropyLoss()
 
     logger.info("Start training")
@@ -61,6 +61,7 @@ def main(config, logger):
             model=model,
             accum_iter=config.TRAIN.ACCUM_ITER,
             criterion=train_loss_fn,
+            mixup_fn=mixup_fn,
             data_loader=data_loader_train,
             optimizer=optimizer,
             epoch=epoch,
@@ -90,7 +91,10 @@ def main(config, logger):
             acc1 = eval_metrics["acc1"]
             if epoch % config.SAVE_FREQ == 0 or (acc1 > max_accuracy):
                 unwrapped_model = model.module
-                utils.save_model(config, epoch, unwrapped_model, optimizer)
+                save_name = str(epoch)
+                if acc1 > max_accuracy:
+                    save_name = "best"
+                utils.save_model(config, save_name, unwrapped_model, optimizer)
 
             max_accuracy = max(max_accuracy, acc1)
 
